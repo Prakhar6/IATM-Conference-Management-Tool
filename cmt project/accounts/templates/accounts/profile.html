@@ -1,0 +1,77 @@
+{% extends 'dashboard.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container d-flex justify-content-center">
+  <div class="card w-100 shadow-sm border-0" style="max-width: 600px;">
+    
+    <!-- Header -->
+    <div class="card-header text-white" style="background-color: #212529;">
+      <h4 class="mb-0">My Profile</h4>
+    </div>
+
+    <!-- Body -->
+    <div class="card-body px-4 py-4">
+
+      <!-- Full Name -->
+      <div class="mb-4">
+        <h6 class="text-muted">Full Name</h6>
+        <p class="fs-5">{{ request.user.first_name }} {{ request.user.last_name }}</p>
+      </div>
+
+      <hr>
+
+      <!-- Email -->
+      <div class="mb-4">
+        <h6 class="text-muted">Email</h6>
+        <p class="fs-5">{{ request.user.email }}</p>
+      </div>
+
+      <hr>
+
+      <!-- Country -->
+      <div class="mb-4">
+        <h6 class="text-muted">Country</h6>
+        <p class="fs-5">{{ request.user.country }}</p>
+      </div>
+
+      <hr>
+
+      <!-- Organization -->
+      <div class="mb-4">
+        <h6 class="text-muted">Organization</h6>
+        <p class="fs-5">{{ request.user.organization }}</p>
+      </div>
+
+      <hr>
+
+      <!-- Phone -->
+      <div class="mb-4">
+        <h6 class="text-muted">Phone</h6>
+        <p class="fs-5">{{ request.user.phone }}</p>
+      </div>
+
+      <hr>
+
+      <!-- Occupation -->
+      <div class="mb-4">
+        <h6 class="text-muted">Occupation</h6>
+        <p class="fs-5">{{ request.user.get_occupation_display }}</p>
+      </div>
+
+      <hr>
+
+      <!-- IATM Membership -->
+      <div class="mb-4">
+        <h6 class="text-muted">IATM Membership</h6>
+        {% if request.user.iatm_membership %}
+          <span class="badge bg-success px-3 py-2">Member</span>
+        {% else %}
+          <span class="badge bg-secondary px-3 py-2">Not a Member</span>
+        {% endif %}
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
