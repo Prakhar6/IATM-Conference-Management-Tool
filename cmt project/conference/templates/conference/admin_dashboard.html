@@ -1,0 +1,101 @@
+{% extends "dashboard.html" %}
+{% load static %}
+
+{% block content %}
+<h2>{{ conference.conference_name }} – Admin Dashboard</h2>
+
+<!-- Pending Registrations -->
+<h4 class="mt-4">Pending Registrations</h4>
+<table class="table table-bordered align-middle table-hover">
+  <thead class="table-dark">
+    <tr>
+      <th>First</th>
+      <th>Last</th>
+      <th>Organization</th>
+      <th>Role 1</th>
+      <th>Role 2</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for member in pending_memberships %}
+      <tr>
+        <form method="POST">
+          {% csrf_token %}
+          <input type="hidden" name="membership_id" value="{{ member.id }}">
+          <td>{{ member.user.first_name }}</td>
+          <td>{{ member.user.last_name }}</td>
+          <td>{{ member.user.organization }}</td>
+          <td>
+            <select name="role1" class="form-select form-select-sm">
+              {% for key, label in Role.choices %}
+                <option value="{{ key }}" {% if member.role1 == key %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </td>
+          <td>
+            <select name="role2" class="form-select form-select-sm">
+              {% for key, label in Role.choices %}
+                <option value="{{ key }}" {% if member.role2 == key %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </td>
+          <td class="d-flex gap-2">
+            <button name="action" value="approve" class="btn btn-success btn-sm">Approve</button>
+            <button name="action" value="deny" class="btn btn-danger btn-sm">Deny</button>
+          </td>
+        </form>
+      </tr>
+    {% empty %}
+      <tr><td colspan="6" class="text-center">No pending users.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<!-- Approved Users -->
+<h4 class="mt-5">Approved Users</h4>
+<table class="table table-bordered align-middle table-hover">
+  <thead class="table-secondary">
+    <tr>
+      <th>First</th>
+      <th>Last</th>
+      <th>Organization</th>
+      <th>Role 1</th>
+      <th>Role 2</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for member in accepted_memberships %}
+      <tr>
+        <form method="POST">
+          {% csrf_token %}
+          <input type="hidden" name="membership_id" value="{{ member.id }}">
+          <td>{{ member.user.first_name }}</td>
+          <td>{{ member.user.last_name }}</td>
+          <td>{{ member.user.organization }}</td>
+          <td>
+            <select name="role1" class="form-select form-select-sm">
+              {% for key, label in Role.choices %}
+                <option value="{{ key }}" {% if member.role1 == key %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </td>
+          <td>
+            <select name="role2" class="form-select form-select-sm">
+              {% for key, label in Role.choices %}
+                <option value="{{ key }}" {% if member.role2 == key %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </td>
+          <td>
+            <button name="action" value="revert" class="btn btn-warning btn-sm">Revert to Pending</button>
+          </td>
+        </form>
+      </tr>
+    {% empty %}
+      <tr><td colspan="6" class="text-center">No approved users.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

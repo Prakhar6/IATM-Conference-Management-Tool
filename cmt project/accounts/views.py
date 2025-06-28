@@ -1,8 +1,8 @@
 from django.shortcuts import render, redirect
-from .forms import login_form, register_form
+from .forms import login_form, CustomUserCreationForm
 from django.contrib.auth import authenticate, login, logout
 from .models import CustomUser
-
+from django.contrib import messages
 
 def login_view(request):
     if request.user.is_authenticated:
@@ -16,19 +16,20 @@ def login_view(request):
     return render(request, 'accounts/login.html', {'form': form})
 
 
-
 def register_view(request):
     if request.method == "POST":
-        form = register_form(request.POST)
+        form = CustomUserCreationForm(request.POST)
         if form.is_valid():
-            user = form.save(commit=False)
-            user.set_password(form.cleaned_data['password'])
-            user.save()
+            user = form.save()
+            login(request, user)
+            messages.success(request, "Welcome! You've successfully registered.")
             return redirect('profile')
     else:
-        form = register_form()
+        form = CustomUserCreationForm()
     
-    return render(request, 'accounts/register.html', {'form':form})
+    return render(request, 'accounts/register.html', {'form': form})
+
+
 
 
 def profile_view(request):

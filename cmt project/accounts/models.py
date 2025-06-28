@@ -35,9 +35,13 @@ class CustomUser(AbstractUser):
     email = models.EmailField(max_length=100, unique=True)
     USERNAME_FIELD = 'email'
 
-    country = models.CharField(max_length=25)
-    organization = models.CharField(max_length=25)
-    phone = models.CharField(max_length=15)
+    first_name = models.CharField(max_length=150, blank=False)
+    last_name = models.CharField(max_length=150, blank=False)
+
+
+    country = models.CharField(max_length=150, blank = False)
+    organization = models.CharField(max_length=150, blank=False)
+    phone = models.CharField(max_length=15, blank=False)
     occupation = models.CharField(max_length=50, choices=Occupation.choices, default=Occupation.STUDENT_UNDERGRADUATE)
 
     iatm_membership = models.BooleanField(default=False)

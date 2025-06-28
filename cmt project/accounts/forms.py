@@ -3,6 +3,7 @@ from .models import CustomUser
 from django.contrib.auth import authenticate
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Submit
+from django.contrib.auth.forms import UserCreationForm
 
 class login_form(forms.Form):
     email = forms.EmailField(label="Email")
@@ -32,24 +33,7 @@ class login_form(forms.Form):
         return getattr(self, 'user', None)
 
     
-
-class register_form(forms.ModelForm):
-    password = forms.CharField(widget=forms.PasswordInput, label="Password")
-    confirm_password = forms.CharField(widget=forms.PasswordInput, label="Confirm Password")
-
+class CustomUserCreationForm(UserCreationForm):
     class Meta:
         model = CustomUser
         fields = ['email', 'first_name', 'last_name', 'country', 'organization', 'phone', 'occupation']
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.helper = FormHelper()
-        self.helper.form_method = 'post'
-        self.helper.add_input(Submit('submit', 'Register', css_class='btn btn-primary w-100'))
-
-    def clean(self):
-        cleaned_data = super().clean()
-        pw = cleaned_data.get('password')
-        cpw = cleaned_data.get('confirm_password')
-        if pw and cpw and pw != cpw:
-            self.add_error('confirm_password', "Passwords do not match.")
