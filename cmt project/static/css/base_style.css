@@ -2,51 +2,46 @@ html {
   font-family: 'Roboto', sans-serif;
 }
 
-.navbar{
+.navbar {
     background-color: #0A090C;
 }
 
 .navbar-brand .logo {
     max-height: 50px;
     width: auto;
-
 }
 
-/* Link styling */
-.nav-link {
-    color: white;
-    font-size: 18px;
-}
-.nav-link:hover {
-    color: #5a5a5a;
-}
 
-.navbar-nav .nav-item + .nav-item {
+.navbar-nav .nav-item {
     margin-left: 1rem;
 }
 
 
-
-.hero-half {
-  position: relative;
-  height: 50vh;                            
-  min-height: 300px;                      
-  background: url('images/hero-bg.jpg')  
-    center/cover no-repeat;
+.nav-link {
+    color: white;
+    font-size: 18px;
 }
 
-.hero-half .overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.4);
+.nav-link:hover {
+    color: #5a5a5a;
 }
 
-.hero-half .content {
-  position: relative;
-  z-index: 1;
+
+.nav-item .active {
+    color: #00aaff !important;
 }
 
-.hero-half h1,
-.hero-half p {
-  text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.7);
+
+.navbar-toggler-icon {
+    background-color: white;
+}
+
+/* Mobile adjustments */
+@media (max-width: 767px) {
+    .navbar-nav {
+        text-align: center;
+    }
+    .nav-link {
+        padding: 10px 0;
+    }
 }
