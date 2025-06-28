@@ -1,31 +1,47 @@
 {% extends 'dashboard.html' %}
-{% load static%}
+{% load static %}
 {% block content %}
-<div class="container d-flex justify-content-center mt-5">
-    <div class="card shadow" style="max-width: 700px; width: 100%;">
-        <!-- Card Header -->
-        <div class="card-header bg-black text-white">
-            <h3 class="mb-0">{{ conference.conference_name }}</h3>
+
+<div class="container d-flex justify-content-center mt-4">
+    <div class="w-100" style="max-width: 700px;">
+
+        <!-- Admin Dashboard Button (Staff Only) -->
+        {% if request.user.is_staff %}
+        <div class="d-flex justify-content-end mb-3">
+            <a href="{% url 'admin_conference_dashboard' slug=conference.slug %}" class="btn btn-danger btn-sm">
+                Admin Dashboard
+            </a>
+        </div>
+        {% endif %}
+
+        <!-- Conference Card -->
+        <div class="card shadow">
+            <!-- Card Header -->
+            <div class="card-header bg-black text-white">
+                <h3 class="mb-0">{{ conference.conference_name }}</h3>
+            </div>
+
+            <!-- Card Body -->
+            <div class="card-body bg-white text-dark">
+                <p class="card-text mb-4">
+                    {{ conference.conference_description }}
+                </p>
+
+                <ul class="list-unstyled">
+                    <li><strong>Start Date:</strong> {{ conference.start_date }}</li>
+                    <li><strong>End Date:</strong> {{ conference.end_date }}</li>
+                    <li><strong>Location:</strong> {{ conference.location }}</li>
+                </ul>
+            </div>
+
+            <!-- Card Footer -->
+            <div class="card-footer d-flex justify-content-between bg-light">
+                <a href="{% url 'conference_list' %}" class="btn btn-outline-dark btn-sm">← Back to All Conferences</a>
+                <a href="{% url 'register_for_conference' conference.slug %}" class="btn btn-primary btn-sm">Register</a>
+            </div>
         </div>
 
-        <!-- Card Body -->
-        <div class="card-body bg-white text-dark">
-            <p class="card-text mb-4">
-                {{ conference.conference_description }}
-            </p>
-
-            <ul class="list-unstyled">
-                <li><strong>Start Date:</strong> {{ conference.start_date }}</li>
-                <li><strong>End Date:</strong> {{ conference.end_date }}</li>
-                <li><strong>Location:</strong> {{ conference.location }}</li>
-            </ul>
-        </div>
-
-        <!-- Card Footer -->
-        <div class="card-footer d-flex justify-content-between bg-light">
-            <a href="{% url 'conference_list' %}" class="btn btn-outline-dark btn-sm">← Back to All Conferences</a>
-            <a href="{% url 'register_for_conference' conference.slug %}" class="btn btn-primary btn-sm">Register</a>  <!-- Replace href later with actual registration URL -->
-        </div>
     </div>
 </div>
+
 {% endblock content %}
