@@ -11,12 +11,86 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js" integrity="sha384-ndDqU0Gzau9qJ1lfW4pNLlhNTkCfHzAVBReH9diLvGRem5+R9g2FzA8ZGN954O5Q" crossorigin="anonymous"></script>
 
     <!--CSS-->
-    <link rel="stylesheet" href="{% static 'css/dashboard_style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/base_style.css' %}">
 
 </head>
 <body>
+
+    <!--Navbar-->
+<nav class="navbar navbar-expand-lg">
+  <div class="container-fluid">
+    <!-- 1) Logo on the left -->
+    <a class="navbar-brand" href="index.html">
+      <img
+        src="images/IATM-White Logo without bg.png"
+        alt="IATM Logo"
+        class="logo"
+      >
+    </a>
+
+    <!-- 2) Toggler for mobile -->
+    <button
+      class="navbar-toggler"
+      type="button"
+      data-bs-toggle="collapse"
+      data-bs-target="#mainNavbar"
+      aria-controls="mainNavbar"
+      aria-expanded="false"
+      aria-label="Toggle navigation"
+    >
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <!-- 3) All links on the right -->
+    <div class="collapse navbar-collapse" id="mainNavbar">
+      <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-lg-center">
+        <li class="nav-item">
+          <a class="nav-link ps-3" href="#">Home</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link ps-3" href="#">About</a>
+        </li>
+        <li class="nav-item dropdown">
+          <a
+            class="nav-link dropdown-toggle ps-3"
+            href="#"
+            id="advisoryDropdown"
+            role="button"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+          >Advisory Board</a>
+          <ul class="dropdown-menu" aria-labelledby="advisoryDropdown">
+            <li><a class="dropdown-item" href="#">Message from the Chairman</a></li>
+            <li><a class="dropdown-item" href="#">Advisory Board Members</a></li>
+            <li><a class="dropdown-item" href="#">International Advisory Board Members</a></li>
+            <li><a class="dropdown-item" href="#">Jr. IATM Members</a></li>
+          </ul>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link ps-3" href="#">IATM 2025 Conference</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link ps-3" href="#">Payment</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link ps-3" href="#">Join</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link ps-3" href="#">News</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link ps-3" href="{% url 'login' %}">Login</a>
+        </li>
+        <li class="nav-item">
+          <a class="btn btn-primary text-white ms-3" href="{% url 'register' %}">Sign Up</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
       {% block content %}
-      <!-- Profile or page content here -->
+      <!-- page content here -->
       {% endblock %}
 </body>
 </html>

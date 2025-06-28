@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     #Apps
     'accounts',
     'conference',
+    'membership',
 
     #Crispy Forms
     "crispy_forms",

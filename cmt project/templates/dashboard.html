@@ -39,7 +39,7 @@
           <a class="nav-link" href="{% url 'profile' %}"> Profile </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="#">Schedule</a>
+          <a class="nav-link" href="{% url 'conference_list' %}">Conferences</a>
         </li>
         <li class="nav-item">
           <a class="nav-link" href="#">Speakers</a>
@@ -58,8 +58,18 @@
 
     <!-- Main Content -->
     <div class="col-md-9 col-lg-10 p-4" id="main">
+
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+
       {% block content %}
-      <!-- Profile or page content here -->
+
       {% endblock %}
     </div>
 
