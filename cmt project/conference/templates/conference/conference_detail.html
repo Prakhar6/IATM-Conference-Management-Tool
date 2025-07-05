@@ -37,7 +37,10 @@
             <!-- Card Footer -->
             <div class="card-footer d-flex justify-content-between bg-light">
                 <a href="{% url 'conference_list' %}" class="btn btn-outline-dark btn-sm">← Back to All Conferences</a>
-                <a href="{% url 'register_for_conference' conference.slug %}" class="btn btn-primary btn-sm">Register</a>
+                <div>
+                    <a href="{% url 'create_submission' slug=conference.slug %}" class="btn btn-success btn-sm me-2">Submit Paper</a>
+                    <a href="{% url 'register_for_conference' conference.slug %}" class="btn btn-primary btn-sm">Register</a>
+                </div>
             </div>
         </div>
 
