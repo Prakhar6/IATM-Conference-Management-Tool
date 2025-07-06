@@ -3,7 +3,7 @@
 {% block content %}
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>My Submissions</h2>
+        <h2>{% if is_chair %}All Conference Submissions{% else %}My Submissions{% endif %}</h2>
         <a href="{% url 'conference_list' %}" class="btn btn-primary">
             Submit New Paper
         </a>
@@ -15,9 +15,13 @@
                 <tr>
                     <th>Paper Title</th>
                     <th>Conference</th>
+                    <th>Author</th>
                     <th>Submission Date</th>
                     <th>Status</th>
+                    {% if not is_chair %}
                     <th>Role</th>
+                    {% endif %}
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -25,6 +29,7 @@
                 <tr>
                     <td><a href="{% url 'submission_detail' pk=submission.pk %}">{{ submission.paper_title }}</a></td>
                     <td>{{ submission.membership.conference.conference_name }}</td>
+                    <td>{{ submission.membership.user.get_full_name|default:submission.membership.user.username }}</td>
                     <td>{{ submission.submission_date|date:"M d, Y" }}</td>
                     <td>
                         {% if submission.status == 'Pending' %}
@@ -39,11 +44,19 @@
                             <span class="badge bg-info">{{ submission.status }}</span>
                         {% endif %}
                     </td>
+                    {% if not is_chair %}
                     <td>
-                        {% if submission.co_authors.exists %}
-                            <span class="badge bg-info">Co-Author</span>
-                        {% else %}
+                        {% if submission.membership.user == user %}
                             <span class="badge bg-primary">Author</span>
+                        {% else %}
+                            <span class="badge bg-info">Co-Author</span>
+                        {% endif %}
+                    </td>
+                    {% endif %}
+                    <td>
+                        <a href="{% url 'submission_detail' pk=submission.pk %}" class="btn btn-info btn-sm">View</a>
+                        {% if is_chair %}
+                        <a href="{% url 'manage_reviewers' submission_id=submission.pk %}" class="btn btn-primary btn-sm">Manage Reviewers</a>
                         {% endif %}
                     </td>
                 </tr>

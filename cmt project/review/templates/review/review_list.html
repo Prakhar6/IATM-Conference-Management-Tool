@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    {% if messages %}
+    <div class="messages mb-4">
+        {% for message in messages %}
+        <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <h2>Review Dashboard</h2>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <h4 class="mb-0">Submissions to Review</h4>
+        </div>
+        <div class="card-body">
+            {% if submissions_to_review %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Paper Title</th>
+                            <th>Conference</th>
+                            <th>Submission Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for submission in submissions_to_review %}
+                        <tr>
+                            <td>{{ submission.paper_title }}</td>
+                            <td>{{ submission.membership.conference.conference_name }}</td>
+                            <td>{{ submission.submission_date|date:"M d, Y" }}</td>
+                            <td>
+                                <a href="{% url 'create_review' submission.id %}" class="btn btn-primary btn-sm">
+                                    Review
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted">No pending submissions to review.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h4 class="mb-0">Completed Reviews</h4>
+        </div>
+        <div class="card-body">
+            {% if completed_reviews %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Paper Title</th>
+                            <th>Conference</th>
+                            <th>Review Date</th>
+                            <th>Recommendation</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for review in completed_reviews %}
+                        <tr>
+                            <td>{{ review.submission.paper_title }}</td>
+                            <td>{{ review.submission.membership.conference.conference_name }}</td>
+                            <td>{{ review.date_reviewed|date:"M d, Y" }}</td>
+                            <td>
+                                {% if review.recommendation == 'ACCEPT' %}
+                                    <span class="badge bg-success">Accept</span>
+                                {% elif review.recommendation == 'REJECT' %}
+                                    <span class="badge bg-danger">Reject</span>
+                                {% elif review.recommendation == 'REVISE' %}
+                                    <span class="badge bg-warning">Needs Revision</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ review.recommendation }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'edit_review' review.id %}" class="btn btn-warning btn-sm">
+                                    Edit
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted">No completed reviews yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %} 

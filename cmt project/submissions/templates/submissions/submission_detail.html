@@ -12,7 +12,15 @@
     </div>
     {% endif %}
 
-    <h2>Submission Details</h2>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Submission Details</h2>
+        {% if is_chair %}
+        <a href="{% url 'manage_reviewers' submission_id=submission.pk %}" class="btn btn-primary">
+            Manage Reviewers
+        </a>
+        {% endif %}
+    </div>
+
     <div class="card">
         <div class="card-body">
             <h3 class="card-title">{{ submission.paper_title }}</h3>

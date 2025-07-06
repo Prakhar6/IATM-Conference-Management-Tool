@@ -3,6 +3,7 @@ from .forms import login_form, CustomUserCreationForm
 from django.contrib.auth import authenticate, login, logout
 from .models import CustomUser
 from django.contrib import messages
+from membership.models import Membership, Role
 
 def login_view(request):
     if request.user.is_authenticated:
@@ -30,10 +31,18 @@ def register_view(request):
     return render(request, 'accounts/register.html', {'form': form})
 
 
-
-
 def profile_view(request):
-    return render(request, 'accounts/profile.html', {'user':request.user})
+    is_reviewer = False
+    if request.user.is_authenticated:
+        is_reviewer = Membership.objects.filter(
+            user=request.user,
+            role1=Role.REVIEWER
+        ).exists()
+    
+    return render(request, 'accounts/profile.html', {
+        'user': request.user,
+        'is_reviewer': is_reviewer
+    })
 
 def profile_edit_view(request):
     pass

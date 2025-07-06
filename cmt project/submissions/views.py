@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from .forms import SubmissionForm
 from .models import Submissions
 from conference.models import Conference
-from membership.models import Membership
+from membership.models import Membership, Role
 from django.contrib import messages
 from review.models import Review
 import os
@@ -41,7 +41,16 @@ def create_submission(request, slug):
 @login_required
 def submission_detail(request, pk):
     submission = get_object_or_404(Submissions, pk=pk)
-    if submission.membership.user != request.user and not submission.co_authors.filter(id=request.user.id).exists():
+    
+    # Check if user is a chair for this conference
+    is_chair = Membership.objects.filter(
+        user=request.user,
+        conference=submission.membership.conference,
+        role1=Role.CHAIR
+    ).exists()
+    
+    # If not a chair, check if user has permission to view
+    if not is_chair and submission.membership.user != request.user and not submission.co_authors.filter(id=request.user.id).exists():
         messages.error(request, "You are not authorized to view this submission")
         return redirect('conference_detail', slug=submission.membership.conference.slug)
     
@@ -51,19 +60,40 @@ def submission_detail(request, pk):
     return render(request, 'submissions/submission_detail.html', {
         'submission': submission,
         'conference': submission.membership.conference,
-        'reviews': reviews
+        'reviews': reviews,
+        'is_chair': is_chair
     })
 
 @login_required
 def submission_list(request):
-    author_submissions = Submissions.objects.filter(membership__user=request.user)
-    coauthor_submissions = Submissions.objects.filter(co_authors=request.user)
+    # Get conferences where user is a chair
+    chair_conferences = Membership.objects.filter(
+        user=request.user,
+        role1=Role.CHAIR
+    ).values_list('conference', flat=True)
+    
+    # If user is a chair, show all submissions from their conferences
+    if chair_conferences:
+        all_submissions = Submissions.objects.filter(
+            membership__conference__in=chair_conferences
+        ).order_by('-submission_date')
+    else:
 
-    all_submissions = (author_submissions | coauthor_submissions).distinct().order_by('-submission_date')
+        all_submissions = Submissions.objects.filter(
+            membership__user=request.user
+        ).order_by('-submission_date')
+        
+        
+        co_authored_submissions = Submissions.objects.filter(
+            co_authors=request.user
+        ).order_by('-submission_date')
+        
+      
+        all_submissions = (all_submissions | co_authored_submissions).distinct()
+    
     return render(request, 'submissions/submission_list.html', {
-        'author_submissions': author_submissions,
-        'coauthor_submissions': coauthor_submissions,
         'all_submissions': all_submissions,
+        'is_chair': bool(chair_conferences) 
     })
 
 @login_required

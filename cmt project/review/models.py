@@ -4,6 +4,19 @@ from submissions.models import Submissions
 from django.utils import timezone
 
 
+class ReviewerAssignment(models.Model):
+    reviewer = models.ForeignKey(Membership, on_delete=models.CASCADE, related_name='assigned_reviews')
+    submission = models.ForeignKey(Submissions, on_delete=models.CASCADE, related_name='reviewer_assignments')
+    assigned_by = models.ForeignKey(Membership, on_delete=models.CASCADE, related_name='reviewer_assignments_made')
+    assigned_date = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ('reviewer', 'submission')
+        
+    def __str__(self):
+        return f"{self.reviewer.user.username} assigned to review {self.submission.paper_title}"
+
+
 # Create your models here.
 class Review(models.Model):
     
