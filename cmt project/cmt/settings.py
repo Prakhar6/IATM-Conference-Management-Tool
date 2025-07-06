@@ -99,8 +99,12 @@ WSGI_APPLICATION = 'cmt.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'iatm_conference_db',  # database name
+        'USER': 'sachith',  
+        'PASSWORD': '',  
+        'HOST': 'localhost',  # database host
+        'PORT': '5432',  # database port
     }
 }
 

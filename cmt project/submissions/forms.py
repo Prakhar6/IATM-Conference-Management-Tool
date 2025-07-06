@@ -1,18 +1,27 @@
 from django import forms
 from .models import Submissions
 from accounts.models import CustomUser
+from django.core.exceptions import ValidationError
 
 class SubmissionForm(forms.ModelForm):
-    paper_title = forms.CharField(max_length=255)
+    paper_title = forms.CharField(
+        max_length=255,
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
     file = forms.FileField(
-        widget=forms.FileInput(attrs={'class': 'form-control-file'}),
+        widget=forms.FileInput(attrs={'class': 'form-control'}),
         required=False
     )
-    co_authors = forms.ModelMultipleChoiceField(
-        queryset=CustomUser.objects.all(),
-        widget=forms.SelectMultiple(attrs={'class': 'form-control'})
+    
+    # Replace ModelMultipleChoiceField with a simple CharField for emails
+    co_author_emails = forms.CharField(
+        required=False,
+        widget=forms.Textarea(attrs={
+            'class': 'form-control',
+            'rows': 3,
+            'placeholder': 'Enter co-author emails (one per line)'
+        })
     )
-    #add track and abstract
 
     def clean_file(self):
         file = self.cleaned_data.get('file')
@@ -30,7 +39,42 @@ class SubmissionForm(forms.ModelForm):
             raise forms.ValidationError("Please upload a PDF file")
         return file
 
+    def clean_co_author_emails(self):
+        emails = self.cleaned_data.get('co_author_emails', '').strip()
+        if not emails:
+            return []
+        
+        email_list = [email.strip() for email in emails.split('\n') if email.strip()]
+        co_authors = []
+        invalid_emails = []
+        
+        for email in email_list:
+            try:
+                user = CustomUser.objects.get(email=email)
+                co_authors.append(user)
+            except CustomUser.DoesNotExist:
+                invalid_emails.append(email)
+        
+        if invalid_emails:
+            raise ValidationError(
+                f"The following emails are not registered in the system: {', '.join(invalid_emails)}"
+            )
+        
+        return co_authors
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        if commit:
+            instance.save()
+            # Get co-authors from the cleaned data
+            co_authors = self.cleaned_data.get('co_author_emails', [])
+            # Clear existing co-authors and set new ones
+            instance.co_authors.clear()
+            if co_authors:
+                instance.co_authors.add(*co_authors)
+        return instance
+
     class Meta:
         model = Submissions
-        fields = ['paper_title', 'file', 'co_authors']
+        fields = ['paper_title', 'file']
 

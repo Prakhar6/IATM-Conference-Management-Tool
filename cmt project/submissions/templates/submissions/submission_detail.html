@@ -27,21 +27,37 @@
 
             <div class="mt-2">
                 <strong>Status:</strong>
-                {% if submission.status == 'PENDING' %}
+                {% if submission.status == 'Pending' %}
                     <span class="badge bg-warning">Pending</span>
-                {% elif submission.status == 'ACCEPTED' %}
+                {% elif submission.status == 'Accepted' %}
                     <span class="badge bg-success">Accepted</span>
-                {% elif submission.status == 'REJECTED' %}
+                {% elif submission.status == 'Rejected' %}
                     <span class="badge bg-danger">Rejected</span>
+                {% elif submission.status == 'Withdrawn' %}
+                    <span class="badge bg-secondary">Withdrawn</span>
                 {% endif %}
             </div>
 
             <div class="mt-2">
-                <strong>Co-Authors:</strong>
+                <strong>Authors:</strong>
                 <ul class="list-unstyled">
-                {% for author in submission.co_authors.all %}
-                    <li>{{ author.email }}</li>
-                {% endfor %}
+                    {% if submission.co_authors.exists %}
+                        <li>
+                            {{ submission.membership.user.email }}
+                            <span class="badge bg-info">Co-Author</span>
+                        </li>
+                        {% for author in submission.co_authors.all %}
+                            <li>
+                                {{ author.email }}
+                                <span class="badge bg-info">Co-Author</span>
+                            </li>
+                        {% endfor %}
+                    {% else %}
+                        <li>
+                            {{ submission.membership.user.email }}
+                            <span class="badge bg-primary">Author</span>
+                        </li>
+                    {% endif %}
                 </ul>
             </div>
 
@@ -56,6 +72,35 @@
                     </a>
                 {% endif %}
             </div>
+
+            {% if reviews %}
+            <div class="mt-4">
+                <h4>Review Feedback</h4>
+                {% for review in reviews %}
+                <div class="card bg-light mb-3">
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <strong>Recommendation:</strong>
+                            {% if review.recommendation == 'ACCEPT' %}
+                                <span class="badge bg-success">Accept</span>
+                            {% elif review.recommendation == 'REJECT' %}
+                                <span class="badge bg-danger">Reject</span>
+                            {% elif review.recommendation == 'REVISE' %}
+                                <span class="badge bg-warning">Needs Revision</span>
+                            {% endif %}
+                        </div>
+                        <div class="mb-3">
+                            <strong>Review Date:</strong> {{ review.date_reviewed|date:"F d, Y" }}
+                        </div>
+                        <div>
+                            <strong>Comments:</strong>
+                            <p class="mt-2">{{ review.comment|linebreaks }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
         </div>
     </div>
 

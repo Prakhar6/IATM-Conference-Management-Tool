@@ -5,6 +5,7 @@ from .models import Submissions
 from conference.models import Conference
 from membership.models import Membership
 from django.contrib import messages
+from review.models import Review
 import os
 # Create your views here.
 @login_required
@@ -22,7 +23,10 @@ def create_submission(request, slug):
             membership = Membership.objects.get(user=request.user, conference=conference)
             submission.membership = membership
             submission.save()
-            form.save_m2m()
+            # Save co-authors
+            co_authors = form.cleaned_data.get('co_author_emails', [])
+            if co_authors:
+                submission.co_authors.add(*co_authors)
             messages.success(request, "Submission Successfully Submitted")
             return redirect('submission_detail', pk=submission.pk)
         else:
@@ -33,15 +37,21 @@ def create_submission(request, slug):
         'conference': conference,
         'form': form
     })
+
 @login_required
 def submission_detail(request, pk):
     submission = get_object_or_404(Submissions, pk=pk)
     if submission.membership.user != request.user and not submission.co_authors.filter(id=request.user.id).exists():
         messages.error(request, "You are not authorized to view this submission")
         return redirect('conference_detail', slug=submission.membership.conference.slug)
+    
+    # Get all reviews for this submission
+    reviews = Review.objects.filter(submission=submission).order_by('-date_reviewed')
+
     return render(request, 'submissions/submission_detail.html', {
         'submission': submission,
-        'conference': submission.membership.conference
+        'conference': submission.membership.conference,
+        'reviews': reviews
     })
 
 @login_required
@@ -66,7 +76,7 @@ def edit_submission(request, pk):
         return redirect('submission_detail', pk=pk)
     
     # Check if submission is still editable
-    if submission.status in ['ACCEPTED', 'REJECTED']:
+    if submission.status in ['Accepted', 'Rejected']:
         messages.error(request, "Cannot edit submission after it has been accepted or rejected")
         return redirect('submission_detail', pk=pk)
     
@@ -79,7 +89,11 @@ def edit_submission(request, pk):
         else:
             messages.error(request, "Please correct the errors below")
     else:
-        form = SubmissionForm(instance=submission)
+        # Pre-populate co-author emails
+        initial_data = {
+            'co_author_emails': '\n'.join(author.email for author in submission.co_authors.all())
+        }
+        form = SubmissionForm(instance=submission, initial=initial_data)
     
     return render(request, 'submissions/edit_submission.html', {
         'form': form,

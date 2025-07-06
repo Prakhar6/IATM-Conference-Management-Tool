@@ -24,22 +24,26 @@
                 {% for submission in all_submissions %}
                 <tr>
                     <td><a href="{% url 'submission_detail' pk=submission.pk %}">{{ submission.paper_title }}</a></td>
-                    <td>{{ submission.membership.conference.name }}</td>
+                    <td>{{ submission.membership.conference.conference_name }}</td>
                     <td>{{ submission.submission_date|date:"M d, Y" }}</td>
                     <td>
-                        {% if submission.status == 'PENDING' %}
+                        {% if submission.status == 'Pending' %}
                             <span class="badge bg-warning">Pending</span>
-                        {% elif submission.status == 'ACCEPTED' %}
+                        {% elif submission.status == 'Accepted' %}
                             <span class="badge bg-success">Accepted</span>
-                        {% elif submission.status == 'REJECTED' %}
+                        {% elif submission.status == 'Rejected' %}
                             <span class="badge bg-danger">Rejected</span>
+                        {% elif submission.status == 'Withdrawn' %}
+                            <span class="badge bg-secondary">Withdrawn</span>
+                        {% else %}
+                            <span class="badge bg-info">{{ submission.status }}</span>
                         {% endif %}
                     </td>
                     <td>
-                        {% if submission.membership.user == request.user %}
-                            <span class="badge bg-primary">Main Author</span>
-                        {% else %}
+                        {% if submission.co_authors.exists %}
                             <span class="badge bg-info">Co-Author</span>
+                        {% else %}
+                            <span class="badge bg-primary">Author</span>
                         {% endif %}
                     </td>
                 </tr>
