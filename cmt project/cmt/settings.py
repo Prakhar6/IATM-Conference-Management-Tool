@@ -104,7 +104,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'iatm_conference_db',  # database name
         'USER': 'iatm_user',  
-        'PASSWORD': 'testing1234',  
+        'PASSWORD': '',  
         'HOST': 'localhost',  # database host
         'PORT': '5432',  # database port
     }
@@ -155,6 +155,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 #for file upload
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
 
 
 
