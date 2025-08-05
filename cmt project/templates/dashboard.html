@@ -44,20 +44,13 @@
         <li class="nav-item">
           <a class="nav-link" href="{% url 'submission_list' %}">My Submissions</a>
         </li>
-        {% if is_reviewer %}
+
+        {% if is_chair %}
         <li class="nav-item">
-          <a class="nav-link" href="{% url 'review_list' %}">Review Papers</a>
+          <a class="nav-link" href="{% url 'chair_review_assignments' %}">Review Papers</a>
         </li>
-        {% endif %}
-        <li class="nav-item">
-          <a class="nav-link" href="#">Speakers</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Sessions</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Resources</a>
-        </li>
+        {% endif %} 
+
         <li class="nav-item mt-4">
           <a class="nav-link text-danger" href="{% url 'logout' %}">Logout</a>
         </li>

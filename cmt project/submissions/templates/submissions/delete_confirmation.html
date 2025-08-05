@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'dashboard.html' %}
 
 {% block content %}
 <div class="container mt-4">
@@ -17,7 +17,7 @@
                 <h6>Submission Details:</h6>
                 <ul class="list-unstyled">
                     <li><strong>Paper Title:</strong> {{ submission.paper_title }}</li>
-                    <li><strong>Conference:</strong> {{ conference.name }}</li>
+                    <li><strong>Conference:</strong> {{ conference.conference_name }}</li>
                     <li><strong>Submission Date:</strong> {{ submission.submission_date|date:"F d, Y" }}</li>
                     <li><strong>Status:</strong> {{ submission.status }}</li>
                 </ul>

@@ -86,6 +86,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'membership.context_processors.is_reviewer',
+                'membership.context_processors.is_chair',
             ],
         },
     },
@@ -101,8 +103,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'iatm_conference_db',  # database name
-        'USER': 'sachith',  
-        'PASSWORD': '',  
+        'USER': 'iatm_user',  
+        'PASSWORD': 'testing1234',  
         'HOST': 'localhost',  # database host
         'PORT': '5432',  # database port
     }

@@ -1,0 +1,32 @@
+{% extends 'dashboard.html' %}
+
+{% block content %}
+<h2>Reviews on Your Submissions</h2>
+
+{% if reviews %}
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Paper Title</th>
+            <th>Reviewer</th>
+            <th>Recommendation</th>
+            <th>Date Reviewed</th>
+            <th>Comments</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for review in reviews %}
+        <tr>
+            <td>{{ review.submission.paper_title }}</td>
+            <td>{{ review.reviewer.email }}</td>
+            <td>{{ review.get_recommendation_display }}</td>
+            <td>{{ review.date_reviewed|date:"F j, Y" }}</td>
+            <td>{{ review.comment|linebreaks }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>No reviews found.</p>
+{% endif %}
+{% endblock %}

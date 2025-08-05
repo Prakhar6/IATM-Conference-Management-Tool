@@ -4,9 +4,7 @@
 {% block content %}
 <h2>{{ conference.conference_name }} – Admin Dashboard</h2>
 
-<!-- DESKTOP TABLE – PENDING -->
-<div class="d-none d-md-block">
-  <h4 class="mt-4">Pending Registrations</h4>
+<div class="table-responsive">
   <table class="table table-bordered align-middle table-hover">
     <thead class="table-dark">
       <tr>
@@ -19,98 +17,9 @@
       </tr>
     </thead>
     <tbody>
-      {% for member in pending_memberships %}
+      {% for member in memberships %}
       <tr>
-        <form method="POST">
-          {% csrf_token %}
-          <input type="hidden" name="membership_id" value="{{ member.id }}">
-          <td>{{ member.user.first_name }}</td>
-          <td>{{ member.user.last_name }}</td>
-          <td>{{ member.user.organization }}</td>
-          <td>
-            <select name="role1" class="form-select form-select-sm">
-              {% for key, label in Role.choices %}
-              <option value="{{ key }}" {% if member.role1 == key %}selected{% endif %}>{{ label }}</option>
-              {% endfor %}
-            </select>
-          </td>
-          <td>
-            <select name="role2" class="form-select form-select-sm">
-              {% for key, label in Role.choices %}
-              <option value="{{ key }}" {% if member.role2 == key %}selected{% endif %}>{{ label }}</option>
-              {% endfor %}
-            </select>
-          </td>
-          <td class="d-flex gap-2">
-            <button name="action" value="approve" class="btn btn-success btn-sm">Approve</button>
-            <button name="action" value="deny" class="btn btn-danger btn-sm">Deny</button>
-          </td>
-        </form>
-      </tr>
-      {% empty %}
-      <tr><td colspan="6" class="text-center">No pending users.</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
-</div>
-
-<!--  MOBILE CARDS – PENDING -->
-<div class="d-md-none">
-  <h4 class="mt-4">Pending Registrations</h4>
-  {% for member in pending_memberships %}
-  <form method="POST" class="card mb-3 shadow-sm">
-    {% csrf_token %}
-    <input type="hidden" name="membership_id" value="{{ member.id }}">
-    <div class="card-body">
-      <h6>{{ member.user.first_name }} {{ member.user.last_name }}</h6>
-      <p class="mb-1"><strong>Organization:</strong> {{ member.user.organization }}</p>
-      <div class="mb-2">
-        <label class="form-label">Role 1</label>
-        <select name="role1" class="form-select form-select-sm">
-          {% for key, label in Role.choices %}
-          <option value="{{ key }}" {% if member.role1 == key %}selected{% endif %}>{{ label }}</option>
-          {% endfor %}
-        </select>
-      </div>
-      <div class="mb-2">
-        <label class="form-label">Role 2</label>
-        <select name="role2" class="form-select form-select-sm">
-          {% for key, label in Role.choices %}
-          <option value="{{ key }}" {% if member.role2 == key %}selected{% endif %}>{{ label }}</option>
-          {% endfor %}
-        </select>
-      </div>
-      <div class="d-flex gap-2 mt-2">
-        <button name="action" value="approve" class="btn btn-success btn-sm w-50">Approve</button>
-        <button name="action" value="deny" class="btn btn-danger btn-sm w-50">Deny</button>
-      </div>
-    </div>
-  </form>
-  {% empty %}
-  <p class="text-muted">No pending users.</p>
-  {% endfor %}
-</div>
-
-<hr class="my-5">
-
-<!--  DESKTOP TABLE – APPROVED -->
-<div class="d-none d-md-block">
-  <h4 class="mt-4">Approved Users</h4>
-  <table class="table table-bordered align-middle table-hover">
-    <thead class="table-secondary">
-      <tr>
-        <th>First</th>
-        <th>Last</th>
-        <th>Organization</th>
-        <th>Role 1</th>
-        <th>Role 2</th>
-        <th>Action</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for member in accepted_memberships %}
-      <tr>
-        <form method="POST">
+        <form method="POST" class="d-flex align-items-center">
           {% csrf_token %}
           <input type="hidden" name="membership_id" value="{{ member.id }}">
           <td>{{ member.user.first_name }}</td>
@@ -131,51 +40,15 @@
             </select>
           </td>
           <td>
-            <button name="action" value="revert" class="btn btn-warning btn-sm">Revert</button>
+            <button type="submit" class="btn btn-primary btn-sm">Update Roles</button>
           </td>
         </form>
       </tr>
       {% empty %}
-      <tr><td colspan="6" class="text-center">No approved users.</td></tr>
+      <tr><td colspan="6" class="text-center">No members registered.</td></tr>
       {% endfor %}
     </tbody>
   </table>
-</div>
-
-<!-- MOBILE CARDS – APPROVED -->
-<div class="d-md-none">
-  <h4 class="mt-4">Approved Users</h4>
-  {% for member in accepted_memberships %}
-  <form method="POST" class="card mb-3 shadow-sm">
-    {% csrf_token %}
-    <input type="hidden" name="membership_id" value="{{ member.id }}">
-    <div class="card-body">
-      <h6>{{ member.user.first_name }} {{ member.user.last_name }}</h6>
-      <p class="mb-1"><strong>Organization:</strong> {{ member.user.organization }}</p>
-      <div class="mb-2">
-        <label class="form-label">Role 1</label>
-        <select name="role1" class="form-select form-select-sm">
-          {% for key, label in Role.choices %}
-          <option value="{{ key }}" {% if member.role1 == key %}selected{% endif %}>{{ label }}</option>
-          {% endfor %}
-        </select>
-      </div>
-      <div class="mb-2">
-        <label class="form-label">Role 2</label>
-        <select name="role2" class="form-select form-select-sm">
-          {% for key, label in Role.choices %}
-          <option value="{{ key }}" {% if member.role2 == key %}selected{% endif %}>{{ label }}</option>
-          {% endfor %}
-        </select>
-      </div>
-      <div class="d-flex gap-2 mt-2">
-        <button name="action" value="revert" class="btn btn-warning btn-sm w-100">Revert to Pending</button>
-      </div>
-    </div>
-  </form>
-  {% empty %}
-  <p class="text-muted">No approved users.</p>
-  {% endfor %}
 </div>
 
 {% endblock %}

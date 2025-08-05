@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from conference.models import Conference
-from .models import Membership, Role, Status
+from .models import Membership, Role  # Removed Status import
 from .forms import MembershipForm
 from django.contrib.admin.views.decorators import staff_member_required
 
@@ -25,7 +25,7 @@ def register_for_conference(request, slug):
                 role1=form.cleaned_data['role1'],
                 role2=form.cleaned_data['role2']
             )
-            messages.success(request, "Registration submitted successfully! Awaiting approval.")
+            messages.success(request, "Registration submitted successfully!")
             return redirect('conference_detail', slug=slug)
     else:
         form = MembershipForm()
@@ -45,28 +45,18 @@ def admin_conference_dashboard_view(request, slug):
         member_id = request.POST.get('membership_id')
         role1 = request.POST.get('role1')
         role2 = request.POST.get('role2')
-        action = request.POST.get('action')  # 'approve', 'deny', 'revert'
+        # Removed action/status update
 
         membership = Membership.objects.get(id=member_id)
         membership.role1 = role1
         membership.role2 = role2
 
-        if action == 'approve':
-            membership.status = Status.ACCEPTED
-        elif action == 'deny':
-            membership.status = Status.REJECTED
-        elif action == 'revert':
-            membership.status = Status.PENDING
-
         membership.save()
         return redirect('admin_conference_dashboard', slug=slug)
 
-    pending = memberships.filter(status=Status.PENDING)
-    accepted = memberships.filter(status=Status.ACCEPTED)
-
+    # No status-based filtering here anymore
     return render(request, 'conference/admin_dashboard.html', {
         'conference': conference,
-        'pending_memberships': pending,
-        'accepted_memberships': accepted,
+        'memberships': memberships,  # all memberships passed to template
         'Role': Role,
     })

@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'dashboard.html' %}
 
 {% block content %}
 <div class="container mt-4">
@@ -15,11 +15,12 @@
                 <tr>
                     <th>Paper Title</th>
                     <th>Conference</th>
+                    <th>Track</th>
                     <th>Author</th>
                     <th>Submission Date</th>
                     <th>Status</th>
                     {% if not is_chair %}
-                    <th>Role</th>
+                    <th>Roles</th>
                     {% endif %}
                     <th>Actions</th>
                 </tr>
@@ -29,16 +30,17 @@
                 <tr>
                     <td><a href="{% url 'submission_detail' pk=submission.pk %}">{{ submission.paper_title }}</a></td>
                     <td>{{ submission.membership.conference.conference_name }}</td>
+                    <td>{{ submission.track.name }}</td>
                     <td>{{ submission.membership.user.get_full_name|default:submission.membership.user.username }}</td>
                     <td>{{ submission.submission_date|date:"M d, Y" }}</td>
                     <td>
-                        {% if submission.status == 'Pending' %}
+                        {% if submission.status == 'PENDING' %}
                             <span class="badge bg-warning">Pending</span>
-                        {% elif submission.status == 'Accepted' %}
+                        {% elif submission.status == 'ACCEPTED' %}
                             <span class="badge bg-success">Accepted</span>
-                        {% elif submission.status == 'Rejected' %}
+                        {% elif submission.status == 'REJECTED' %}
                             <span class="badge bg-danger">Rejected</span>
-                        {% elif submission.status == 'Withdrawn' %}
+                        {% elif submission.status == 'WITHDRAWN' %}
                             <span class="badge bg-secondary">Withdrawn</span>
                         {% else %}
                             <span class="badge bg-info">{{ submission.status }}</span>
@@ -46,11 +48,9 @@
                     </td>
                     {% if not is_chair %}
                     <td>
-                        {% if submission.membership.user == user %}
-                            <span class="badge bg-primary">Author</span>
-                        {% else %}
-                            <span class="badge bg-info">Co-Author</span>
-                        {% endif %}
+                        {% for role in submission.roles %}
+                            <span class="badge bg-dark me-1">{{ role }}</span>
+                        {% endfor %}
                     </td>
                     {% endif %}
                     <td>
@@ -62,7 +62,7 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="5" class="text-center">
+                    <td colspan="{% if not is_chair %}8{% else %}7{% endif %}" class="text-center">
                         No submissions found. 
                         <a href="{% url 'conference_list' %}">Submit your first paper!</a>
                     </td>
@@ -72,4 +72,4 @@
         </table>
     </div>
 </div>
-{% endblock %} 
+{% endblock %}

@@ -1,163 +1,92 @@
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
-from django.contrib import messages
-from .models import Review, ReviewerAssignment
-from .forms import ReviewForm
 from submissions.models import Submissions
 from membership.models import Membership, Role
+from .models import Review
+from .forms import ReviewForm
+from django.contrib import messages
 from django.db.models import Q
 
 @login_required
-def review_list(request):
-    # Get user's memberships where they are a reviewer
-    reviewer_memberships = Membership.objects.filter(
-        user=request.user,
-        role1=Role.REVIEWER
-    )
-    
-    # Get submissions that have been assigned to this reviewer
-    submissions_to_review = Submissions.objects.filter(
-        reviewer_assignments__reviewer__in=reviewer_memberships
-    ).exclude(
-        review__membership__user=request.user  # Exclude already reviewed submissions
-    ).order_by('-submission_date')
-    
-    # Get reviews done by the user
-    completed_reviews = Review.objects.filter(
-        membership__user=request.user
-    ).order_by('-date_reviewed')
-    
-    return render(request, 'review/review_list.html', {
-        'submissions_to_review': submissions_to_review,
-        'completed_reviews': completed_reviews,
-    })
+def chair_review_assignments(request):
+    # Conferences where user is chair
+    chair_memberships = Membership.objects.filter(user=request.user, role1=Role.CHAIR)
+    chair_conferences = [m.conference for m in chair_memberships]
 
-@login_required
-def create_review(request, submission_id):
-    submission = get_object_or_404(Submissions, pk=submission_id)
-    
-    # Check if user is a reviewer for this conference and has been assigned this submission
-    try:
-        reviewer_membership = Membership.objects.get(
-            user=request.user,
-            conference=submission.membership.conference,
-            role1=Role.REVIEWER
-        )
-        # Check if the reviewer has been assigned this submission
-        if not ReviewerAssignment.objects.filter(reviewer=reviewer_membership, submission=submission).exists():
-            messages.error(request, "You have not been assigned to review this submission")
-            return redirect('review_list')
-    except Membership.DoesNotExist:
-        messages.error(request, "You are not authorized to review submissions for this conference")
-        return redirect('review_list')
-    
-    # Check if user hasn't already reviewed this submission
-    if Review.objects.filter(membership=reviewer_membership, submission=submission).exists():
-        messages.error(request, "You have already reviewed this submission")
-        return redirect('review_list')
-    
-    if request.method == "POST":
-        form = ReviewForm(request.POST)
-        if form.is_valid():
-            review = form.save(commit=False)
-            review.membership = reviewer_membership
-            review.submission = submission
-            review.save()
-            messages.success(request, "Review submitted successfully")
-            return redirect('review_list')
+    # Get selected conference slug from GET param
+    selected_slug = request.GET.get('conference')
+    selected_conference = None
+    submissions = Submissions.objects.none()
+
+    if selected_slug:
+        selected_conference = next((c for c in chair_conferences if c.slug == selected_slug), None)
+        if selected_conference:
+            submissions = Submissions.objects.filter(membership__conference=selected_conference).order_by('-submission_date')
     else:
-        form = ReviewForm()
-    
-    return render(request, 'review/create_review.html', {
-        'form': form,
-        'submission': submission,
-    })
+        # If no filter, show all submissions across all chair conferences
+        submissions = Submissions.objects.filter(membership__conference__in=chair_conferences).order_by('-submission_date')
+
+    # TODO: Logic for assigning reviewers (probably via POST, or separate form/modal)
+    # For now just list submissions and allow navigation
+
+    context = {
+        'chair_conferences': chair_conferences,
+        'selected_conference': selected_conference,
+        'submissions': submissions,
+    }
+    return render(request, 'review/chair_review_assignments.html', context)
 
 @login_required
-def manage_reviewers(request, submission_id):
-    submission = get_object_or_404(Submissions, pk=submission_id)
-    
-    # Check if user is a chair for this conference
-    try:
-        chair_membership = Membership.objects.get(
-            user=request.user,
-            conference=submission.membership.conference,
-            role1=Role.CHAIR
-        )
-    except Membership.DoesNotExist:
-        messages.error(request, "You are not authorized to manage reviewers for this conference")
-        return redirect('conference_detail', slug=submission.membership.conference.slug)
-    
-    # Get all reviewers for this conference
-    available_reviewers = Membership.objects.filter(
-        conference=submission.membership.conference,
-        role1=Role.REVIEWER
-    ).exclude(
-        user=submission.membership.user  # Exclude the author
-    ).exclude(
-        assigned_reviews__submission=submission  # Exclude already assigned reviewers
-    )
-    
-    # Get currently assigned reviewers
-    assigned_reviewers = Membership.objects.filter(
-        assigned_reviews__submission=submission
-    )
-    
-    if request.method == "POST":
-        reviewer_id = request.POST.get('reviewer_id')
-        action = request.POST.get('action')
-        
-        if action == 'assign':
-            reviewer = get_object_or_404(Membership, id=reviewer_id)
-            ReviewerAssignment.objects.create(
-                reviewer=reviewer,
-                submission=submission,
-                assigned_by=chair_membership
-            )
-            messages.success(request, f"Reviewer {reviewer.user.username} assigned successfully")
-        
-        elif action == 'unassign':
-            ReviewerAssignment.objects.filter(
-                reviewer_id=reviewer_id,
-                submission=submission
-            ).delete()
-            messages.success(request, "Reviewer unassigned successfully")
-        
-        return redirect('manage_reviewers', submission_id=submission_id)
-    
-    return render(request, 'review/manage_reviewers.html', {
-        'submission': submission,
-        'available_reviewers': available_reviewers,
-        'assigned_reviewers': assigned_reviewers,
-    })
+def reviewer_dashboard(request):
+    # Reviews assigned to this reviewer and not submitted yet
+    pending_reviews = Review.objects.filter(reviewer=request.user, is_submitted=False).select_related('submission').order_by('date_assigned')
+
+    context = {
+        'pending_reviews': pending_reviews,
+    }
+    return render(request, 'review/reviewer_dashboard.html', context)
 
 @login_required
-def edit_review(request, review_id):
-    review = get_object_or_404(Review, pk=review_id)
-    
-    # Check if user is the reviewer
-    if review.membership.user != request.user:
-        messages.error(request, "You are not authorized to edit this review")
-        return redirect('review_list')
-    
-    # Check if user is still a reviewer and still assigned to this submission
-    if review.membership.role1 != Role.REVIEWER or not ReviewerAssignment.objects.filter(
-        reviewer=review.membership,
-        submission=review.submission
-    ).exists():
-        messages.error(request, "You are no longer assigned to review this submission")
-        return redirect('review_list')
-    
-    if request.method == "POST":
+def submit_review(request, review_id):
+    review = get_object_or_404(Review, id=review_id, reviewer=request.user)
+    submission = review.submission
+
+    if request.method == 'POST':
         form = ReviewForm(request.POST, instance=review)
         if form.is_valid():
-            form.save()
-            messages.success(request, "Review updated successfully")
-            return redirect('review_list')
+            review = form.save(commit=False)
+            review.is_submitted = True
+            from django.utils import timezone
+            review.date_reviewed = timezone.now()
+            review.save()
+            messages.success(request, "Review submitted successfully.")
+            return redirect('reviewer_dashboard')
+        else:
+            messages.error(request, "Please correct the errors below.")
     else:
         form = ReviewForm(instance=review)
-    
-    return render(request, 'review/edit_review.html', {
+
+    context = {
         'form': form,
+        'submission': submission,
         'review': review,
-    })
+    }
+    return render(request, 'review/submit_review.html', context)
+
+@login_required
+def author_reviews(request):
+    # Get all submissions by this user (including co-authored maybe)
+    submissions = Submissions.objects.filter(
+        Q(membership__user=request.user) | 
+        Q(co_author1=request.user) | 
+        Q(co_author2=request.user) | 
+        Q(co_author3=request.user)
+    )
+
+    # Get all reviews for these submissions
+    reviews = Review.objects.filter(submission__in=submissions).select_related('submission', 'reviewer').order_by('-date_reviewed')
+
+    context = {
+        'reviews': reviews,
+    }
+    return render(request, 'review/author_reviews.html', context)

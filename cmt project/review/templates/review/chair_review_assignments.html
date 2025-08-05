@@ -1,0 +1,49 @@
+{% extends 'dashboard.html' %}
+
+{% block content %}
+<h2>Assign Reviewers to Submissions</h2>
+
+<form method="get" class="mb-3">
+    <label for="conferenceSelect" class="form-label">Filter by Conference:</label>
+    <select id="conferenceSelect" name="conference" class="form-select" onchange="this.form.submit()">
+        <option value="">All Conferences</option>
+        {% for conf in chair_conferences %}
+            <option value="{{ conf.slug }}" {% if selected_conference and selected_conference.slug == conf.slug %}selected{% endif %}>{{ conf.conference_name }}</option>
+        {% endfor %}
+    </select>
+</form>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Paper Title</th>
+            <th>Conference</th>
+            <th>Authors</th>
+            <th>Submission Date</th>
+            <th>Assign Reviewers</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for submission in submissions %}
+        <tr>
+            <td>{{ submission.paper_title }}</td>
+            <td>{{ submission.membership.conference.conference_name }}</td>
+            <td>
+                {{ submission.membership.user.email }}
+                {% if submission.co_author1 %}, {{ submission.co_author1.email }}{% endif %}
+                {% if submission.co_author2 %}, {{ submission.co_author2.email }}{% endif %}
+                {% if submission.co_author3 %}, {{ submission.co_author3.email }}{% endif %}
+            </td>
+            <td>{{ submission.submission_date|date:"F j, Y" }}</td>
+            <td>
+                <a href="{% url 'assign_reviewers_to_submission' submission.pk %}" class="btn btn-primary btn-sm">
+                    Assign Reviewers
+                </a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5">No submissions found.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

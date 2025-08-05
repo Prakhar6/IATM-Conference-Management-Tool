@@ -1,5 +1,11 @@
 from django.contrib import admin
-from .models import Conference
+from .models import Conference, Track
+
+class TrackInline(admin.TabularInline):
+    model = Track
+    extra = 1  # How many empty forms to show by default
+    min_num = 1
+    can_delete = True
 
 @admin.register(Conference)
 class ConferenceAdmin(admin.ModelAdmin):
@@ -7,7 +13,7 @@ class ConferenceAdmin(admin.ModelAdmin):
     list_filter = ('start_date', 'location')
     search_fields = ('conference_name', 'conference_description', 'location')
     ordering = ('-start_date',)
-    prepopulated_fields = {'slug': ('conference_name',)}  # Optional: to auto-generate slugs in admin
+    prepopulated_fields = {'slug': ('conference_name',)}
 
     fieldsets = (
         (None, {
@@ -22,3 +28,5 @@ class ConferenceAdmin(admin.ModelAdmin):
         }),
     )
     readonly_fields = ('created_at',)
+
+    inlines = [TrackInline]

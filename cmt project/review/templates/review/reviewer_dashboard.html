@@ -1,0 +1,33 @@
+{% extends 'dashboard.html' %}
+
+{% block content %}
+<h2>My Assigned Reviews</h2>
+
+{% if pending_reviews %}
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Paper Title</th>
+            <th>Conference</th>
+            <th>Assigned Date</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for review in pending_reviews %}
+        <tr>
+            <td>{{ review.submission.paper_title }}</td>
+            <td>{{ review.submission.membership.conference.conference_name }}</td>
+            <td>{{ review.date_assigned|date:"F j, Y" }}</td>
+            <td>
+                <a href="{% url 'submit_review' review.id %}" class="btn btn-primary btn-sm">Submit Review</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>You have no assigned reviews pending.</p>
+{% endif %}
+
+{% endblock %}
