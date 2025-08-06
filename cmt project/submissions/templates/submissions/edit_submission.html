@@ -1,96 +1,546 @@
 {% extends 'dashboard.html' %}
+{% load static %}
+
+{% block title %}Edit Submission - {{ block.super }}{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="row">
-        <div class="col-md-8 offset-md-2">
-            <h2>Edit Submission</h2>
-            <p class="text-muted">Conference: {{ conference.name }}</p>
 
-            {% if submission.role1 or submission.role2 %}
-                <p class="mb-3">
-                    <strong>Your Roles:</strong>
-                    {% if submission.role1 %}
-                        <span class="badge bg-dark me-1">{{ submission.role1 }}</span>
-                    {% endif %}
-                    {% if submission.role2 %}
-                        <span class="badge bg-dark">{{ submission.role2 }}</span>
-                    {% endif %}
-                </p>
-            {% endif %}
-
-            <form method="POST" enctype="multipart/form-data">
-                {% csrf_token %}
-
-                <div class="mb-3">
-                    <label for="{{ form.track.id_for_label }}" class="form-label">Track</label>
-                    {{ form.track }}
-                    {% if form.track.errors %}
-                        <div class="alert alert-danger">
-                            {{ form.track.errors }}
-                        </div>
-                    {% endif %}
-                </div>
-
-                <div class="mb-3">
-                    <label for="{{ form.paper_title.id_for_label }}" class="form-label">Paper Title</label>
-                    {{ form.paper_title }}
-                    {% if form.paper_title.errors %}
-                        <div class="alert alert-danger">
-                            {{ form.paper_title.errors }}
-                        </div>
-                    {% endif %}
-                </div>
-
-                <div class="mb-3">
-                    <label for="{{ form.co_author_email_1.id_for_label }}" class="form-label">Co-Author 1 Email</label>
-                    {{ form.co_author_email_1 }}
-                    {% if form.co_author_email_1.errors %}
-                        <div class="alert alert-danger">
-                            {{ form.co_author_email_1.errors }}
-                        </div>
-                    {% endif %}
-                </div>
-
-                <div class="mb-3">
-                    <label for="{{ form.co_author_email_2.id_for_label }}" class="form-label">Co-Author 2 Email</label>
-                    {{ form.co_author_email_2 }}
-                    {% if form.co_author_email_2.errors %}
-                        <div class="alert alert-danger">
-                            {{ form.co_author_email_2.errors }}
-                        </div>
-                    {% endif %}
-                </div>
-
-                <div class="mb-3">
-                    <label for="{{ form.co_author_email_3.id_for_label }}" class="form-label">Co-Author 3 Email</label>
-                    {{ form.co_author_email_3 }}
-                    {% if form.co_author_email_3.errors %}
-                        <div class="alert alert-danger">
-                            {{ form.co_author_email_3.errors }}
-                        </div>
-                    {% endif %}
-                </div>
-
-                <div class="mb-3">
-                    <label for="{{ form.file.id_for_label }}" class="form-label">Paper File (PDF only, leave empty to keep current file)</label>
-                    {{ form.file }}
-                    {% if form.file.errors %}
-                        <div class="alert alert-danger">
-                            {{ form.file.errors }}
-                        </div>
-                    {% endif %}
-                    {% if submission.file %}
-                        <p class="text-muted mt-2">Current file: {{ submission.file.name }}</p>
-                    {% endif %}
-                </div>
-
-                <div class="mt-4">
-                    <button type="submit" class="btn btn-primary">Save Changes</button>
-                    <a href="{% url 'submission_detail' pk=submission.pk %}" class="btn btn-secondary ms-2">Cancel</a>
-                </div>
-            </form>
+<div class="edit-submission-hero mb-5">
+    <div class="hero-content text-center">
+        <h1 class="hero-title">
+            <i class="fas fa-edit me-3"></i>
+            Edit Submission
+        </h1>
+        <p class="hero-subtitle">Update your paper details and make necessary changes</p>
+        <div class="hero-stats">
+            <div class="stat-item">
+                <i class="fas fa-building"></i>
+                <span>{{ conference.name }}</span>
+            </div>
+            <div class="stat-item">
+                <i class="fas fa-file-alt"></i>
+                <span>{{ submission.paper_title|truncatewords:5 }}</span>
+            </div>
+            <div class="stat-item">
+                <i class="fas fa-calendar-alt"></i>
+                <span>{{ submission.submission_date|date:"M j, Y" }}</span>
+            </div>
+            <div class="stat-item">
+                <i class="fas fa-user-edit"></i>
+                <span>Edit Mode</span>
+            </div>
         </div>
     </div>
 </div>
+
+<div class="container">
+    <div class="row">
+        <div class="col-lg-8 offset-lg-2">
+            <!-- Edit Form Card -->
+            <div class="edit-form-card">
+                <div class="edit-form-card-body">
+                    <div class="form-header">
+                        <h3 class="form-title">
+                            <i class="fas fa-edit me-2"></i>
+                            Update Submission Details
+                        </h3>
+                        <p class="form-subtitle">Make changes to your paper information and upload a new version if needed</p>
+                    </div>
+
+                    {% if submission.role1 or submission.role2 %}
+                        <div class="roles-section mb-4">
+                            <div class="roles-header">
+                                <h4 class="roles-title">
+                                    <i class="fas fa-user-tag me-2"></i>
+                                    Your Conference Roles
+                                </h4>
+                            </div>
+                            <div class="roles-badges">
+                                {% if submission.role1 %}
+                                    <span class="role-badge">{{ submission.role1 }}</span>
+                                {% endif %}
+                                {% if submission.role2 %}
+                                    <span class="role-badge">{{ submission.role2 }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <form method="POST" enctype="multipart/form-data" class="edit-form">
+                        {% csrf_token %}
+
+                        <div class="form-section">
+                            <h4 class="section-title">
+                                <i class="fas fa-layer-group me-2"></i>
+                                Track & Title
+                            </h4>
+                            
+                            <div class="form-group">
+                                <label for="{{ form.track.id_for_label }}" class="form-label">
+                                    <i class="fas fa-tag me-1"></i>
+                                    Track
+                                </label>
+                                {{ form.track }}
+                                {% if form.track.errors %}
+                                    <div class="error-message">
+                                        <i class="fas fa-exclamation-circle me-1"></i>
+                                        {{ form.track.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="form-group">
+                                <label for="{{ form.paper_title.id_for_label }}" class="form-label">
+                                    <i class="fas fa-heading me-1"></i>
+                                    Paper Title
+                                </label>
+                                {{ form.paper_title }}
+                                {% if form.paper_title.errors %}
+                                    <div class="error-message">
+                                        <i class="fas fa-exclamation-circle me-1"></i>
+                                        {{ form.paper_title.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h4 class="section-title">
+                                <i class="fas fa-users me-2"></i>
+                                Co-Authors
+                            </h4>
+                            
+                            <div class="form-group">
+                                <label for="{{ form.co_author_email_1.id_for_label }}" class="form-label">
+                                    <i class="fas fa-user me-1"></i>
+                                    Co-Author 1 Email
+                                </label>
+                                {{ form.co_author_email_1 }}
+                                {% if form.co_author_email_1.errors %}
+                                    <div class="error-message">
+                                        <i class="fas fa-exclamation-circle me-1"></i>
+                                        {{ form.co_author_email_1.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="form-group">
+                                <label for="{{ form.co_author_email_2.id_for_label }}" class="form-label">
+                                    <i class="fas fa-user me-1"></i>
+                                    Co-Author 2 Email
+                                </label>
+                                {{ form.co_author_email_2 }}
+                                {% if form.co_author_email_2.errors %}
+                                    <div class="error-message">
+                                        <i class="fas fa-exclamation-circle me-1"></i>
+                                        {{ form.co_author_email_2.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="form-group">
+                                <label for="{{ form.co_author_email_3.id_for_label }}" class="form-label">
+                                    <i class="fas fa-user me-1"></i>
+                                    Co-Author 3 Email
+                                </label>
+                                {{ form.co_author_email_3 }}
+                                {% if form.co_author_email_3.errors %}
+                                    <div class="error-message">
+                                        <i class="fas fa-exclamation-circle me-1"></i>
+                                        {{ form.co_author_email_3.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h4 class="section-title">
+                                <i class="fas fa-file-pdf me-2"></i>
+                                Paper File
+                            </h4>
+                            
+                            <div class="form-group">
+                                <label for="{{ form.file.id_for_label }}" class="form-label">
+                                    <i class="fas fa-upload me-1"></i>
+                                    Paper File (PDF only)
+                                </label>
+                                <div class="file-upload-info">
+                                    <p class="upload-hint">Leave empty to keep the current file</p>
+                                </div>
+                                {{ form.file }}
+                                {% if form.file.errors %}
+                                    <div class="error-message">
+                                        <i class="fas fa-exclamation-circle me-1"></i>
+                                        {{ form.file.errors }}
+                                    </div>
+                                {% endif %}
+                                {% if submission.file %}
+                                    <div class="current-file-info">
+                                        <i class="fas fa-file-pdf me-2"></i>
+                                        <span class="current-file-name">Current file: {{ submission.file.name }}</span>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-save me-2"></i>
+                                Save Changes
+                            </button>
+                            <a href="{% url 'submission_detail' pk=submission.pk %}" class="btn btn-outline-secondary btn-lg">
+                                <i class="fas fa-times me-2"></i>
+                                Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Hero Section */
+.edit-submission-hero {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 4rem 0;
+    margin: -2rem -2rem 3rem -2rem;
+    border-radius: 0 0 2rem 2rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.edit-submission-hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="50" cy="10" r="0.5" fill="rgba(255,255,255,0.1)"/><circle cx="10" cy="60" r="0.5" fill="rgba(255,255,255,0.1)"/><circle cx="90" cy="40" r="0.5" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+    opacity: 0.3;
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+}
+
+.hero-title {
+    color: white;
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.hero-subtitle {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 1.25rem;
+    margin-bottom: 2rem;
+    font-weight: 300;
+}
+
+.hero-stats {
+    display: flex;
+    justify-content: center;
+    gap: 3rem;
+    flex-wrap: wrap;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.stat-item i {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.stat-item span {
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-align: center;
+    max-width: 150px;
+}
+
+/* Edit Form Card */
+.edit-form-card {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    border: 1px solid rgba(102, 126, 234, 0.1);
+    overflow: hidden;
+}
+
+.edit-form-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+.edit-form-card-body {
+    padding: 2.5rem;
+}
+
+.form-header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+}
+
+.form-title {
+    font-size: 2rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+}
+
+.form-subtitle {
+    font-size: 1.1rem;
+    color: #6c757d;
+    margin-bottom: 0;
+}
+
+/* Roles Section */
+.roles-section {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 15px;
+    padding: 1.5rem;
+    border: 1px solid rgba(102, 126, 234, 0.1);
+}
+
+.roles-header {
+    margin-bottom: 1rem;
+}
+
+.roles-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #495057;
+    margin: 0;
+}
+
+.roles-badges {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.role-badge {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 25px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Form Sections */
+.form-section {
+    margin-bottom: 2.5rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.form-section:last-of-type {
+    border-bottom: none;
+    margin-bottom: 2rem;
+}
+
+.section-title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #667eea;
+    display: inline-block;
+}
+
+/* Form Groups */
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-label {
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 0.75rem;
+    display: block;
+    font-size: 1rem;
+}
+
+.form-label i {
+    color: #667eea;
+}
+
+/* Form Controls */
+.form-control, .form-select {
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: #f8f9fa;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    background: white;
+    outline: none;
+}
+
+/* File Upload */
+.file-upload-info {
+    background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+    border-radius: 10px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border: 1px solid rgba(102, 126, 234, 0.1);
+}
+
+.upload-hint {
+    color: #495057;
+    font-size: 0.9rem;
+    margin: 0;
+    font-style: italic;
+}
+
+.current-file-info {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 10px;
+    padding: 1rem;
+    margin-top: 1rem;
+    border: 1px solid #dee2e6;
+    display: flex;
+    align-items: center;
+}
+
+.current-file-info i {
+    color: #dc3545;
+    font-size: 1.2rem;
+}
+
+.current-file-name {
+    color: #495057;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+/* Error Messages */
+.error-message {
+    background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+    color: #c62828;
+    padding: 0.75rem 1rem;
+    border-radius: 10px;
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
+    border: 1px solid #ffcdd2;
+}
+
+.error-message i {
+    color: #c62828;
+}
+
+/* Form Actions */
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid #e9ecef;
+}
+
+.btn {
+    padding: 0.75rem 2rem;
+    border-radius: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    min-width: 150px;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+    color: white;
+    text-decoration: none;
+}
+
+.btn-outline-secondary {
+    background: transparent;
+    color: #6c757d;
+    border: 2px solid #6c757d;
+}
+
+.btn-outline-secondary:hover {
+    background: #6c757d;
+    color: white;
+    transform: translateY(-2px);
+    text-decoration: none;
+}
+
+.btn-lg {
+    padding: 1rem 2.5rem;
+    font-size: 1.1rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .hero-title {
+        font-size: 2rem;
+    }
+    
+    .hero-stats {
+        gap: 1.5rem;
+    }
+    
+    .form-title {
+        font-size: 1.5rem;
+    }
+    
+    .edit-form-card-body {
+        padding: 1.5rem;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .btn {
+        min-width: auto;
+    }
+    
+    .roles-badges {
+        justify-content: center;
+    }
+    
+    .stat-item span {
+        max-width: 120px;
+        font-size: 0.8rem;
+    }
+}
+</style>
+
 {% endblock %}

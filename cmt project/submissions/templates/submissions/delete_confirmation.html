@@ -19,7 +19,21 @@
                     <li><strong>Paper Title:</strong> {{ submission.paper_title }}</li>
                     <li><strong>Conference:</strong> {{ conference.conference_name }}</li>
                     <li><strong>Submission Date:</strong> {{ submission.submission_date|date:"F d, Y" }}</li>
-                    <li><strong>Status:</strong> {{ submission.status }}</li>
+                    <li><strong>Status:</strong> 
+                        {% if submission.status == 'PENDING' %}
+                            <span class="badge bg-warning">Pending</span>
+                        {% elif submission.status == 'ACCEPTED' %}
+                            <span class="badge bg-success">Accepted</span>
+                        {% elif submission.status == 'REJECTED' %}
+                            <span class="badge bg-danger">Rejected</span>
+                        {% elif submission.status == 'REVISION' %}
+                            <span class="badge bg-info">Needs Revision</span>
+                        {% elif submission.status == 'WITHDRAWN' %}
+                            <span class="badge bg-secondary">Withdrawn</span>
+                        {% else %}
+                            <span class="badge bg-info">{{ submission.status }}</span>
+                        {% endif %}
+                    </li>
                 </ul>
             </div>
 

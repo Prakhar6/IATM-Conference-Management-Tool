@@ -14,9 +14,17 @@ import os
 def create_submission(request, slug):
     conference = get_object_or_404(Conference, slug=slug)
 
-    # Roles for sidebar
-    is_chair = Membership.objects.filter(user=request.user, role1=Role.CHAIR).exists()
-    is_reviewer = Membership.objects.filter(user=request.user, role1=Role.REVIEWER).exists()
+    # Roles for sidebar - match context processors
+    is_chair = request.user.is_staff or Membership.objects.filter(
+        user=request.user
+    ).filter(
+        Q(role1='Chair') | Q(role2='Chair')
+    ).exists()
+    is_reviewer = request.user.is_staff or Membership.objects.filter(
+        user=request.user
+    ).filter(
+        Q(role1='Reviewer') | Q(role2='Reviewer')
+    ).exists()
 
     if not Membership.objects.filter(user=request.user, conference=conference).exists():
         messages.error(request, "You are not a member of this conference to submit a paper")
@@ -48,15 +56,18 @@ def create_submission(request, slug):
 def submission_detail(request, pk):
     submission = get_object_or_404(Submissions, pk=pk)
 
-    is_chair = Membership.objects.filter(
+    # Roles for sidebar - match context processors
+    is_chair = request.user.is_staff or Membership.objects.filter(
         user=request.user,
-        conference=submission.membership.conference,
-        role1=Role.CHAIR
+        conference=submission.membership.conference
+    ).filter(
+        Q(role1='Chair') | Q(role2='Chair')
     ).exists()
-    is_reviewer = Membership.objects.filter(
+    is_reviewer = request.user.is_staff or Membership.objects.filter(
         user=request.user,
-        conference=submission.membership.conference,
-        role1=Role.REVIEWER
+        conference=submission.membership.conference
+    ).filter(
+        Q(role1='Reviewer') | Q(role2='Reviewer')
     ).exists()
 
     is_authorized = (
@@ -82,12 +93,21 @@ def submission_detail(request, pk):
 
 @login_required
 def submission_list(request):
-    is_chair = Membership.objects.filter(user=request.user, role1=Role.CHAIR).exists()
-    is_reviewer = Membership.objects.filter(user=request.user, role1=Role.REVIEWER).exists()
+    # Roles for sidebar - match context processors
+    is_chair = request.user.is_staff or Membership.objects.filter(
+        user=request.user
+    ).filter(
+        Q(role1='Chair') | Q(role2='Chair')
+    ).exists()
+    is_reviewer = request.user.is_staff or Membership.objects.filter(
+        user=request.user
+    ).filter(
+        Q(role1='Reviewer') | Q(role2='Reviewer')
+    ).exists()
 
     chair_conferences = Membership.objects.filter(
         user=request.user,
-        role1=Role.CHAIR
+        role1='Chair'
     ).values_list('conference', flat=True)
 
     if chair_conferences:
@@ -136,8 +156,17 @@ def submission_list(request):
 
 @login_required
 def edit_submission(request, pk):
-    is_chair = Membership.objects.filter(user=request.user, role1=Role.CHAIR).exists()
-    is_reviewer = Membership.objects.filter(user=request.user, role1=Role.REVIEWER).exists()
+    # Roles for sidebar - match context processors
+    is_chair = request.user.is_staff or Membership.objects.filter(
+        user=request.user
+    ).filter(
+        Q(role1='Chair') | Q(role2='Chair')
+    ).exists()
+    is_reviewer = request.user.is_staff or Membership.objects.filter(
+        user=request.user
+    ).filter(
+        Q(role1='Reviewer') | Q(role2='Reviewer')
+    ).exists()
 
     submission = get_object_or_404(Submissions, pk=pk)
 
@@ -181,8 +210,17 @@ def edit_submission(request, pk):
 
 @login_required
 def delete_submission(request, pk):
-    is_chair = Membership.objects.filter(user=request.user, role1=Role.CHAIR).exists()
-    is_reviewer = Membership.objects.filter(user=request.user, role1=Role.REVIEWER).exists()
+    # Roles for sidebar - match context processors
+    is_chair = request.user.is_staff or Membership.objects.filter(
+        user=request.user
+    ).filter(
+        Q(role1='Chair') | Q(role2='Chair')
+    ).exists()
+    is_reviewer = request.user.is_staff or Membership.objects.filter(
+        user=request.user
+    ).filter(
+        Q(role1='Reviewer') | Q(role2='Reviewer')
+    ).exists()
 
     submission = get_object_or_404(Submissions, pk=pk)
 

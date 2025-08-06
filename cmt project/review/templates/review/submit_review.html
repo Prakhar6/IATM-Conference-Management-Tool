@@ -1,38 +1,79 @@
 {% extends 'dashboard.html' %}
+{% load crispy_forms_tags %}
 
 {% block content %}
-<h2>Submit Review for: "{{ submission.paper_title }}"</h2>
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Submit Review</h4>
+                </div>
+                <div class="card-body">
+                    <!-- Submission Details -->
+                    <div class="row mb-4">
+                        <div class="col-md-8">
+                            <h5 class="text-primary">{{ submission.paper_title }}</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>Conference:</strong> {{ submission.membership.conference.conference_name }}</p>
+                                    <p><strong>Track:</strong> {{ submission.track.name }}</p>
+                                    <p><strong>Submission Date:</strong> {{ submission.submission_date|date:"F j, Y" }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Main Author:</strong> {{ submission.membership.user.get_full_name|default:submission.membership.user.email }}</p>
+                                    {% if submission.co_author1 or submission.co_author2 or submission.co_author3 %}
+                                    <p><strong>Co-authors:</strong>
+                                        {% if submission.co_author1 %}{{ submission.co_author1.get_full_name|default:submission.co_author1.email }}{% endif %}
+                                        {% if submission.co_author2 %}, {{ submission.co_author2.get_full_name|default:submission.co_author2.email }}{% endif %}
+                                        {% if submission.co_author3 %}, {{ submission.co_author3.get_full_name|default:submission.co_author3.email }}{% endif %}
+                                    </p>
+                                    {% endif %}
+                                    <p><strong>Current Status:</strong> 
+                                                                            <span class="badge {% if submission.status == 'ACCEPTED' %}bg-success{% elif submission.status == 'REJECTED' %}bg-danger{% elif submission.status == 'REVISION' %}bg-info{% else %}bg-warning{% endif %}">
+                                        {{ submission.get_status_display }}
+                                    </span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <a href="{{ submission.file.url }}" target="_blank" class="btn btn-outline-primary">
+                                <i class="fas fa-download"></i> Download Paper
+                            </a>
+                        </div>
+                    </div>
 
-<p>
-    <strong>Conference:</strong> {{ submission.membership.conference.conference_name }}<br>
-    <strong>Authors:</strong> {{ submission.membership.user.email }}
-    {% if submission.co_author1 %}, {{ submission.co_author1.email }}{% endif %}
-    {% if submission.co_author2 %}, {{ submission.co_author2.email }}{% endif %}
-    {% if submission.co_author3 %}, {{ submission.co_author3.email }}{% endif %}
-</p>
+                    <hr>
 
-<p>
-    <a href="{{ submission.file.url }}" target="_blank" class="btn btn-secondary mb-3">Download Paper</a>
-</p>
-
-<form method="post">
-    {% csrf_token %}
-    {{ form.non_field_errors }}
-    <div class="mb-3">
-        {{ form.comment.label_tag }}
-        {{ form.comment }}
-        {% if form.comment.errors %}
-            <div class="text-danger">{{ form.comment.errors }}</div>
-        {% endif %}
+                    <!-- Review Form -->
+                    <form method="post">
+                        {% csrf_token %}
+                        {{ form|crispy }}
+                        
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% url 'reviewer_dashboard' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Back to Dashboard
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane"></i> Submit Review
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="mb-3">
-        {{ form.recommendation.label_tag }}
-        {{ form.recommendation }}
-        {% if form.recommendation.errors %}
-            <div class="text-danger">{{ form.recommendation.errors }}</div>
-        {% endif %}
-    </div>
-    <button type="submit" class="btn btn-primary">Submit Review</button>
-    <a href="{% url 'reviewer_dashboard' %}" class="btn btn-secondary ms-2">Cancel</a>
-</form>
+</div>
+
+<style>
+.card {
+    border: none;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.badge {
+    font-size: 0.875em;
+}
+</style>
 {% endblock %}

@@ -1,54 +1,453 @@
 {% extends "dashboard.html" %}
 {% load static %}
 
-{% block content %}
-<h2>{{ conference.conference_name }} – Admin Dashboard</h2>
+{% block title %}{{ conference.conference_name }} - Admin Dashboard - {{ block.super }}{% endblock %}
 
-<div class="table-responsive">
-  <table class="table table-bordered align-middle table-hover">
-    <thead class="table-dark">
-      <tr>
-        <th>First</th>
-        <th>Last</th>
-        <th>Organization</th>
-        <th>Role 1</th>
-        <th>Role 2</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for member in memberships %}
-      <tr>
-        <form method="POST" class="d-flex align-items-center">
-          {% csrf_token %}
-          <input type="hidden" name="membership_id" value="{{ member.id }}">
-          <td>{{ member.user.first_name }}</td>
-          <td>{{ member.user.last_name }}</td>
-          <td>{{ member.user.organization }}</td>
-          <td>
-            <select name="role1" class="form-select form-select-sm">
-              {% for key, label in Role.choices %}
-              <option value="{{ key }}" {% if member.role1 == key %}selected{% endif %}>{{ label }}</option>
-              {% endfor %}
-            </select>
-          </td>
-          <td>
-            <select name="role2" class="form-select form-select-sm">
-              {% for key, label in Role.choices %}
-              <option value="{{ key }}" {% if member.role2 == key %}selected{% endif %}>{{ label }}</option>
-              {% endfor %}
-            </select>
-          </td>
-          <td>
-            <button type="submit" class="btn btn-primary btn-sm">Update Roles</button>
-          </td>
-        </form>
-      </tr>
-      {% empty %}
-      <tr><td colspan="6" class="text-center">No members registered.</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
+{% block content %}
+
+<div class="admin-hero mb-5">
+    <div class="hero-content text-center">
+        <h1 class="hero-title">
+            <i class="fas fa-cog me-3"></i>
+            Admin Dashboard
+        </h1>
+        <p class="hero-subtitle">Manage conference memberships and roles for {{ conference.conference_name }}</p>
+        <div class="hero-stats">
+            <div class="stat-item">
+                <i class="fas fa-users"></i>
+                <span>{{ memberships.count }} Members</span>
+            </div>
+            <div class="stat-item">
+                <i class="fas fa-user-tie"></i>
+                <span>{{ memberships|length }} Total Registrations</span>
+            </div>
+            <div class="stat-item">
+                <i class="fas fa-calendar-alt"></i>
+                <span>{{ conference.conference_name }}</span>
+            </div>
+            <div class="stat-item">
+                <i class="fas fa-shield-alt"></i>
+                <span>Admin Access</span>
+            </div>
+        </div>
+    </div>
 </div>
+
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <!-- Back Button -->
+            <div class="mb-4">
+                <a href="{% url 'conference_detail' conference.slug %}" class="btn btn-outline-primary">
+                    <i class="fas fa-arrow-left me-2"></i>
+                    Back to Conference Details
+                </a>
+            </div>
+
+            <!-- Memberships Management Card -->
+            <div class="admin-card mb-4">
+                <div class="admin-card-body">
+                    <div class="admin-header">
+                        <h3 class="admin-title">
+                            <i class="fas fa-users me-2"></i>
+                            Conference Memberships
+                        </h3>
+                        <p class="admin-subtitle">Manage member roles and permissions for {{ conference.conference_name }}</p>
+                    </div>
+
+                    {% if memberships %}
+                        <div class="memberships-table">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Organization</th>
+                                            <th>Role 1</th>
+                                            <th>Role 2</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for member in memberships %}
+                                        <tr class="member-row">
+                                            <td>
+                                                <div class="member-info">
+                                                    <div class="member-name">
+                                                        {{ member.user.first_name }} {{ member.user.last_name }}
+                                                    </div>
+                                                    <div class="member-email">
+                                                        {{ member.user.email }}
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="organization">{{ member.user.organization|default:"Not specified" }}</span>
+                                            </td>
+                                            <td>
+                                                <form method="POST" class="role-form">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="membership_id" value="{{ member.id }}">
+                                                    <select name="role1" class="form-select role-select">
+                                                        {% for key, label in Role.choices %}
+                                                        <option value="{{ key }}" {% if member.role1 == key %}selected{% endif %}>{{ label }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                            </td>
+                                            <td>
+                                                    <select name="role2" class="form-select role-select">
+                                                        {% for key, label in Role.choices %}
+                                                        <option value="{{ key }}" {% if member.role2 == key %}selected{% endif %}>{{ label }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                            </td>
+                                            <td>
+                                                    <button type="submit" class="btn btn-primary btn-sm">
+                                                        <i class="fas fa-save me-1"></i>
+                                                        Update
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="empty-state">
+                            <div class="empty-state-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <h3>No Members Registered</h3>
+                            <p>No members have registered for this conference yet.</p>
+                            <div class="empty-state-decoration"></div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Hero Section */
+.admin-hero {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 4rem 0;
+    margin: -2rem -2rem 3rem -2rem;
+    border-radius: 0 0 2rem 2rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.admin-hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="50" cy="10" r="0.5" fill="rgba(255,255,255,0.1)"/><circle cx="10" cy="60" r="0.5" fill="rgba(255,255,255,0.1)"/><circle cx="90" cy="40" r="0.5" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+    opacity: 0.3;
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+}
+
+.hero-title {
+    color: white;
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.hero-subtitle {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 1.25rem;
+    margin-bottom: 2rem;
+    font-weight: 300;
+}
+
+.hero-stats {
+    display: flex;
+    justify-content: center;
+    gap: 3rem;
+    flex-wrap: wrap;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.stat-item i {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.stat-item span {
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+/* Admin Card */
+.admin-card {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    border: 1px solid rgba(102, 126, 234, 0.1);
+    overflow: hidden;
+    position: relative;
+}
+
+.admin-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+.admin-card-body {
+    padding: 2rem;
+}
+
+.admin-header {
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.admin-title {
+    font-size: 2rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+    line-height: 1.3;
+}
+
+.admin-subtitle {
+    font-size: 1.1rem;
+    color: #6c757d;
+    margin-bottom: 0;
+}
+
+/* Table Styling */
+.memberships-table {
+    background: #f8f9fa;
+    border-radius: 15px;
+    padding: 1.5rem;
+    border: 1px solid #e9ecef;
+}
+
+.table {
+    margin-bottom: 0;
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+}
+
+.table thead th {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+    color: white;
+    border: none;
+    padding: 1rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 0.9rem;
+}
+
+.table tbody tr {
+    transition: all 0.3s ease;
+}
+
+.table tbody tr:hover {
+    background: rgba(102, 126, 234, 0.05);
+    transform: translateY(-1px);
+}
+
+.table tbody td {
+    padding: 1rem;
+    border: none;
+    border-bottom: 1px solid #e9ecef;
+    vertical-align: middle;
+}
+
+.member-row:last-child td {
+    border-bottom: none;
+}
+
+.member-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.member-name {
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 1rem;
+}
+
+.member-email {
+    font-size: 0.85rem;
+    color: #6c757d;
+    margin-top: 0.25rem;
+}
+
+.organization {
+    font-weight: 500;
+    color: #495057;
+}
+
+.role-form {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.role-select {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 0.5rem;
+    padding-right: 2rem;
+    font-size: 0.9rem;
+    background: white;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.5rem center;
+    background-repeat: no-repeat;
+    background-size: 1.5em 1.5em;
+    appearance: none;
+    transition: all 0.3s ease;
+}
+
+.role-select:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    outline: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23667eea' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+}
+
+/* Buttons */
+.btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 10px;
+    font-weight: 500;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+    color: white;
+    text-decoration: none;
+}
+
+.btn-outline-primary {
+    background: transparent;
+    color: #667eea;
+    border: 2px solid #667eea;
+}
+
+.btn-outline-primary:hover {
+    background: #667eea;
+    color: white;
+    transform: translateY(-2px);
+    text-decoration: none;
+}
+
+.btn-sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: #6c757d;
+}
+
+.empty-state-icon {
+    font-size: 4rem;
+    margin-bottom: 2rem;
+    color: #dee2e6;
+}
+
+.empty-state h3 {
+    margin-bottom: 1rem;
+    color: #495057;
+    font-weight: 600;
+}
+
+.empty-state p {
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+}
+
+.empty-state-decoration {
+    width: 100px;
+    height: 4px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    margin: 0 auto;
+    border-radius: 2px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .hero-title {
+        font-size: 2rem;
+    }
+    
+    .hero-stats {
+        gap: 1.5rem;
+    }
+    
+    .admin-title {
+        font-size: 1.5rem;
+    }
+    
+    .table-responsive {
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    
+    .table thead th {
+        padding: 0.75rem 0.5rem;
+        font-size: 0.8rem;
+    }
+    
+    .table tbody td {
+        padding: 0.75rem 0.5rem;
+    }
+    
+    .role-form {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .role-select {
+        width: 100%;
+    }
+}
+</style>
 
 {% endblock %}

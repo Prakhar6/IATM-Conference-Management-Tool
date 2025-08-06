@@ -1,33 +1,543 @@
 {% extends 'dashboard.html' %}
+{% load static %}
+
+{% block title %}Reviewer Dashboard - {{ block.super }}{% endblock %}
 
 {% block content %}
-<h2>My Assigned Reviews</h2>
 
-{% if pending_reviews %}
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>Paper Title</th>
-            <th>Conference</th>
-            <th>Assigned Date</th>
-            <th>Action</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for review in pending_reviews %}
-        <tr>
-            <td>{{ review.submission.paper_title }}</td>
-            <td>{{ review.submission.membership.conference.conference_name }}</td>
-            <td>{{ review.date_assigned|date:"F j, Y" }}</td>
-            <td>
-                <a href="{% url 'submit_review' review.id %}" class="btn btn-primary btn-sm">Submit Review</a>
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-{% else %}
-<p>You have no assigned reviews pending.</p>
-{% endif %}
+<div class="reviewer-hero mb-5">
+    <div class="hero-content text-center">
+        <h1 class="hero-title">
+            <i class="fas fa-user-tie me-3"></i>
+            Reviewer Dashboard
+        </h1>
+        <p class="hero-subtitle">Manage your assigned paper reviews and track your progress</p>
+        <div class="hero-stats">
+            <div class="stat-item">
+                <i class="fas fa-clock"></i>
+                <span>{{ pending_reviews.count }} Pending</span>
+            </div>
+            <div class="stat-item">
+                <i class="fas fa-check-circle"></i>
+                <span>{{ submitted_reviews.count }} Submitted</span>
+            </div>
+            <div class="stat-item">
+                <i class="fas fa-clipboard-list"></i>
+                <span>{{ total_reviews }} Total</span>
+            </div>
+            <div class="stat-item">
+                <i class="fas fa-percentage"></i>
+                <span>{{ completion_rate }}% Complete</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <!-- Back Button -->
+            <div class="mb-4">
+                <a href="{% url 'profile' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-arrow-left me-2"></i>
+                    Back to Dashboard
+                </a>
+            </div>
+
+            <!-- Pending Reviews Section -->
+            <div class="section-header mb-4">
+                <h2><i class="fas fa-clock me-2"></i>Pending Reviews ({{ pending_reviews.count }})</h2>
+            </div>
+
+            {% if pending_reviews %}
+                {% for review in pending_reviews %}
+                    <div class="submission-card mb-4">
+                        <div class="submission-card-body">
+                            <div class="row align-items-center">
+                                <!-- Submission Info -->
+                                <div class="col-lg-8">
+                                    <div class="submission-header">
+                                        <div class="submission-title-section">
+                                            <h3 class="submission-title">{{ review.submission.paper_title }}</h3>
+                                            <div class="submission-badges">
+                                                <span class="badge badge-pending">Pending Review</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="submission-details">
+                                            <div class="detail-grid">
+                                                <div class="detail-item">
+                                                    <i class="fas fa-building"></i>
+                                                    <div class="detail-content">
+                                                        <span class="detail-label">Conference</span>
+                                                        <span class="detail-value">{{ review.submission.membership.conference.conference_name|default:"Unknown Conference" }}</span>
+                                                    </div>
+                                                </div>
+                                                <div class="detail-item">
+                                                    <i class="fas fa-user"></i>
+                                                    <div class="detail-content">
+                                                        <span class="detail-label">Author</span>
+                                                        <span class="detail-value">{{ review.submission.membership.user.get_full_name|default:review.submission.membership.user.email }}</span>
+                                                    </div>
+                                                </div>
+                                                <div class="detail-item">
+                                                    <i class="fas fa-calendar-day"></i>
+                                                    <div class="detail-content">
+                                                        <span class="detail-label">Assigned</span>
+                                                        <span class="detail-value">{{ review.date_assigned|date:"F j, Y" }}</span>
+                                                    </div>
+                                                </div>
+                                                <div class="detail-item">
+                                                    <i class="fas fa-file-alt"></i>
+                                                    <div class="detail-content">
+                                                        <span class="detail-label">Track</span>
+                                                        <span class="detail-value">{{ review.submission.track.name }}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Action Buttons -->
+                                <div class="col-lg-4">
+                                    <div class="submission-actions">
+                                        <a href="{% url 'submit_review' review.id %}" 
+                                           class="btn btn-primary btn-lg btn-submit">
+                                            <i class="fas fa-edit me-2"></i>
+                                            Submit Review
+                                        </a>
+                                        <a href="{{ review.submission.file.url }}" 
+                                           class="btn btn-outline-secondary btn-download" target="_blank">
+                                            <i class="fas fa-download me-2"></i>
+                                            Download Paper
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-state-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <h3>All Caught Up!</h3>
+                    <p>You have no pending reviews at the moment.</p>
+                    <div class="empty-state-decoration"></div>
+                </div>
+            {% endif %}
+
+            <!-- Submitted Reviews Section -->
+            <div class="section-header mb-4 mt-5">
+                <h2><i class="fas fa-check-circle me-2"></i>Submitted Reviews ({{ submitted_reviews.count }})</h2>
+            </div>
+
+            {% if submitted_reviews %}
+                {% for review in submitted_reviews %}
+                    <div class="submission-card mb-4">
+                        <div class="submission-card-body">
+                            <div class="row align-items-center">
+                                <!-- Submission Info -->
+                                <div class="col-lg-8">
+                                    <div class="submission-header">
+                                        <div class="submission-title-section">
+                                            <h3 class="submission-title">{{ review.submission.paper_title }}</h3>
+                                            <div class="submission-badges">
+                                                <span class="badge badge-{{ review.recommendation|lower }}">
+                                                    {{ review.get_recommendation_display }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="submission-details">
+                                            <div class="detail-grid">
+                                                <div class="detail-item">
+                                                    <i class="fas fa-building"></i>
+                                                    <div class="detail-content">
+                                                        <span class="detail-label">Conference</span>
+                                                        <span class="detail-value">{{ review.submission.membership.conference.conference_name|default:"Unknown Conference" }}</span>
+                                                    </div>
+                                                </div>
+                                                <div class="detail-item">
+                                                    <i class="fas fa-user"></i>
+                                                    <div class="detail-content">
+                                                        <span class="detail-label">Author</span>
+                                                        <span class="detail-value">{{ review.submission.membership.user.get_full_name|default:review.submission.membership.user.email }}</span>
+                                                    </div>
+                                                </div>
+                                                <div class="detail-item">
+                                                    <i class="fas fa-calendar-check"></i>
+                                                    <div class="detail-content">
+                                                        <span class="detail-label">Submitted</span>
+                                                        <span class="detail-value">{{ review.date_reviewed|date:"F j, Y" }}</span>
+                                                    </div>
+                                                </div>
+                                                <div class="detail-item">
+                                                    <i class="fas fa-comment"></i>
+                                                    <div class="detail-content">
+                                                        <span class="detail-label">Comments</span>
+                                                        <span class="detail-value">{{ review.comment|truncatewords:10|default:"No comments" }}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Action Buttons -->
+                                <div class="col-lg-4">
+                                    <div class="submission-actions">
+                                        <a href="{% url 'submit_review' review.id %}" 
+                                           class="btn btn-outline-primary btn-edit">
+                                            <i class="fas fa-edit me-2"></i>
+                                            Edit Review
+                                        </a>
+                                        <a href="{{ review.submission.file.url }}" 
+                                           class="btn btn-outline-secondary btn-download" target="_blank">
+                                            <i class="fas fa-download me-2"></i>
+                                            Download Paper
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-state-icon">
+                        <i class="fas fa-inbox"></i>
+                    </div>
+                    <h3>No Submitted Reviews</h3>
+                    <p>Your submitted reviews will appear here once you complete them.</p>
+                    <div class="empty-state-decoration"></div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+/* Hero Section */
+.reviewer-hero {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 4rem 0;
+    margin: -2rem -2rem 3rem -2rem;
+    border-radius: 0 0 2rem 2rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.reviewer-hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="50" cy="10" r="0.5" fill="rgba(255,255,255,0.1)"/><circle cx="10" cy="60" r="0.5" fill="rgba(255,255,255,0.1)"/><circle cx="90" cy="40" r="0.5" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+    opacity: 0.3;
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+}
+
+.hero-title {
+    color: white;
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.hero-subtitle {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 1.25rem;
+    margin-bottom: 2rem;
+    font-weight: 300;
+}
+
+.hero-stats {
+    display: flex;
+    justify-content: center;
+    gap: 3rem;
+    flex-wrap: wrap;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.stat-item i {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.stat-item span {
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+/* Section Headers */
+.section-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 1.5rem 2rem;
+    border-radius: 15px;
+    margin-bottom: 2rem;
+}
+
+.section-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+}
+
+/* Submission Cards */
+.submission-card {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    border: 1px solid rgba(102, 126, 234, 0.1);
+    overflow: hidden;
+    position: relative;
+}
+
+.submission-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+.submission-card-body {
+    padding: 2rem;
+}
+
+.submission-title-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.submission-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin: 0;
+    line-height: 1.3;
+}
+
+.submission-badges {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.badge {
+    padding: 0.5rem 1rem;
+    border-radius: 25px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.badge-pending {
+    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    color: #2c3e50;
+}
+
+.badge-accept {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    color: white;
+}
+
+.badge-reject {
+    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    color: white;
+}
+
+.badge-revise {
+    background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+    color: #2c3e50;
+}
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.detail-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.detail-item i {
+    font-size: 1.2rem;
+    color: #667eea;
+    width: 20px;
+    text-align: center;
+}
+
+.detail-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.detail-label {
+    font-size: 0.8rem;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+}
+
+.detail-value {
+    font-size: 1rem;
+    color: #2c3e50;
+    font-weight: 500;
+}
+
+.submission-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+}
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 10px;
+    font-weight: 500;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+    color: white;
+    text-decoration: none;
+}
+
+.btn-outline-secondary {
+    background: transparent;
+    color: #6c757d;
+    border: 2px solid #6c757d;
+}
+
+.btn-outline-secondary:hover {
+    background: #6c757d;
+    color: white;
+    transform: translateY(-2px);
+    text-decoration: none;
+}
+
+.btn-outline-primary {
+    background: transparent;
+    color: #667eea;
+    border: 2px solid #667eea;
+}
+
+.btn-outline-primary:hover {
+    background: #667eea;
+    color: white;
+    transform: translateY(-2px);
+    text-decoration: none;
+}
+
+.btn-lg {
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: #6c757d;
+}
+
+.empty-state-icon {
+    font-size: 4rem;
+    margin-bottom: 2rem;
+    color: #dee2e6;
+}
+
+.empty-state h3 {
+    margin-bottom: 1rem;
+    color: #495057;
+    font-weight: 600;
+}
+
+.empty-state p {
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+}
+
+.empty-state-decoration {
+    width: 100px;
+    height: 4px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    margin: 0 auto;
+    border-radius: 2px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .hero-title {
+        font-size: 2rem;
+    }
+    
+    .hero-stats {
+        gap: 1.5rem;
+    }
+    
+    .submission-title-section {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .detail-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .submission-actions {
+        margin-top: 2rem;
+    }
+    
+    .btn-lg {
+        padding: 0.75rem 1.5rem;
+        font-size: 1rem;
+    }
+}
+</style>
 
 {% endblock %}

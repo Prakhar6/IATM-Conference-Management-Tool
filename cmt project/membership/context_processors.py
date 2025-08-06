@@ -11,7 +11,7 @@ def is_reviewer(request):
             reviewer_status = Membership.objects.filter(
                 user=user
             ).filter(
-                Q(role1=Role.REVIEWER) | Q(role2=Role.REVIEWER)
+                Q(role1='Reviewer') | Q(role2='Reviewer')
             ).exists()
     return {
         'is_reviewer': reviewer_status
@@ -27,7 +27,7 @@ def is_chair(request):
             chair_status = Membership.objects.filter(
                 user=user
             ).filter(
-                Q(role1=Role.CHAIR) | Q(role2=Role.CHAIR)
+                Q(role1='Chair') | Q(role2='Chair')
             ).exists()
     return {
         'is_chair': chair_status
