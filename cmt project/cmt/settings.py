@@ -104,7 +104,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'iatm_conference_db',  # database name
         'USER': 'iatm_user',  
-        'PASSWORD': '',  
+        'PASSWORD': 'testing1234',  
         'HOST': 'localhost',  # database host
         'PORT': '5432',  # database port
     }
