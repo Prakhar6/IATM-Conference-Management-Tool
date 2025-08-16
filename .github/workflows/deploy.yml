@@ -1,0 +1,51 @@
+name: Deploy
+on:
+  push:
+    branches: [ "main" ]
+
+env:
+  AWS_REGION: ${{ vars.AWS_REGION }}
+  AWS_ACCOUNT_ID: ${{ vars.AWS_ACCOUNT_ID }}
+  ECR_REPOSITORY: iatm-app
+  IMAGE_TAG: ${{ github.sha }}
+  EC2_INSTANCE_ID: ${{ vars.EC2_INSTANCE_ID }}
+  RDS_DB: ${{ vars.RDS_DB }}
+  RDS_USER: ${{ vars.RDS_USER }}
+  RDS_PASSWORD: ${{ vars.RDS_PASSWORD }}
+  RDS_ENDPOINT: ${{ vars.RDS_ENDPOINT }}
+  DJANGO_ALLOWED_HOSTS: ${{ vars.DJANGO_ALLOWED_HOSTS }}
+  DEPLOY_ROLE_ARN: ${{ vars.DEPLOY_ROLE_ARN }}
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions: { contents: read, id-token: write }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ env.DEPLOY_ROLE_ARN }}
+      - uses: aws-actions/amazon-ecr-login@v2
+      - uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
+            ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:latest
+      - name: Deploy to EC2 via SSM
+        run: |
+          aws ssm send-command --document-name "AWS-RunShellScript" --instance-ids "${EC2_INSTANCE_ID}" --parameters commands='[
+            "set -e",
+            "mkdir -p /srv/iatm && cd /srv/iatm",
+            "aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com",
+            "cat > .env <<EOF\nPOSTGRES_DB=$RDS_DB\nPOSTGRES_USER=$RDS_USER\nPOSTGRES_PASSWORD=$RDS_PASSWORD\nPOSTGRES_HOST=$RDS_ENDPOINT\nPOSTGRES_PORT=5432\nDJANGO_ALLOWED_HOSTS=$DJANGO_ALLOWED_HOSTS\nDJANGO_DEBUG=False\nEOF",
+            "cat > docker-compose.yml <<'YML'\nservices:\n  app:\n    image: $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/${ECR_REPOSITORY}:latest\n    env_file: .env\n    command: gunicorn cmt.wsgi:application --bind 0.0.0.0:8000 --workers 3 --timeout 60\n    volumes:\n      - ./staticfiles:/app/staticfiles\n      - ./media:/app/media\n    networks: [appnet]\n  nginx:\n    image: nginx:1.27-alpine\n    volumes:\n      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro\n      - ./staticfiles:/static:ro\n      - ./media:/media:ro\n    ports:\n      - \"80:80\"\n    depends_on: [app]\n    networks: [appnet]\nnetworks:\n  appnet:\n    driver: bridge\nYML",
+            "cat > nginx.conf <<'NGINX'\nserver {\n    listen 80;\n    server_name _;\n    location /static/ { alias /static/; access_log off; expires 1d; }\n    location /media/  { alias /media/;  access_log off; expires 1d; }\n    location / { proxy_pass http://app:8000; proxy_set_header Host $host; proxy_set_header X-Forwarded-Proto $scheme; proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; }\n}\nNGINX",
+            "docker pull $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/${ECR_REPOSITORY}:latest",
+            "mkdir -p staticfiles media",
+            "docker compose up -d",
+            "docker compose exec -T app python \"cmt project/manage.py\" migrate --noinput",
+            "docker compose exec -T app python \"cmt project/manage.py\" collectstatic --noinput || true"
+          ]' --comment "Deploy $GITHUB_SHA"
