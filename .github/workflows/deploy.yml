@@ -6,12 +6,12 @@ on:
 env:
   AWS_REGION: ${{ vars.AWS_REGION }}
   AWS_ACCOUNT_ID: ${{ vars.AWS_ACCOUNT_ID }}
-  ECR_REPOSITORY: iatm-app
+  ECR_REPOSITORY: iatm
   IMAGE_TAG: ${{ github.sha }}
   EC2_INSTANCE_ID: ${{ vars.EC2_INSTANCE_ID }}
   RDS_DB: ${{ vars.RDS_DB }}
   RDS_USER: ${{ vars.RDS_USER }}
-  RDS_PASSWORD: ${{ vars.RDS_PASSWORD }}
+  RDS_PASSWORD: ${{ secrets.RDS_PASSWORD }}
   RDS_ENDPOINT: ${{ vars.RDS_ENDPOINT }}
   DJANGO_ALLOWED_HOSTS: ${{ vars.DJANGO_ALLOWED_HOSTS }}
   DEPLOY_ROLE_ARN: ${{ vars.DEPLOY_ROLE_ARN }}
