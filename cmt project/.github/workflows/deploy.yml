@@ -1,4 +1,4 @@
-name: Deploy to EC2
+name: Deploy to EC2 via AWS
 
 on:
   push:
@@ -13,33 +13,32 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       
-    - name: Deploy to EC2
-      uses: appleboy/ssh-action@v1.0.0
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
       with:
-        host: ${{ secrets.EC2_HOST }}
-        username: ${{ secrets.EC2_USERNAME }}
-        key: ${{ secrets.EC2_SSH_KEY }}
-        port: 22
-        script: |
-          # Navigate to project directory
-          cd ~/IATM-Conference-Management-Tool
-          
-          # Pull latest changes
-          git pull origin main
-          
-          # Navigate to the cmt project subdirectory
-          cd "cmt project"
-          
-          # Install/update dependencies
-          pip install -r requirements.txt
-          
-          # Run migrations
-          python manage.py migrate
-          
-          # Collect static files
-          python manage.py collectstatic --noinput
-          
-          # Restart the application
-          sudo systemctl restart iatm-cmt
-          
-          echo "Deployment completed successfully!"
+        aws-region: ${{ secrets.AWS_REGION }}
+        role-to-assume: ${{ secrets.DEPLOY_ROLE_ARN }}
+        role-duration-seconds: 1200
+      
+    - name: Deploy to EC2 using AWS SSM
+      run: |
+        # Send deployment command to EC2 via AWS Systems Manager
+        aws ssm send-command \
+          --instance-ids "${{ secrets.EC2_INSTANCE_ID }}" \
+          --document-name "AWS-RunShellScript" \
+          --parameters 'commands=[
+            "cd ~/IATM-Conference-Management-Tool",
+            "git pull origin main",
+            "cd \"cmt project\"",
+            "pip install -r requirements.txt",
+            "python manage.py migrate",
+            "python manage.py collectstatic --noinput",
+            "sudo systemctl restart iatm-cmt",
+            "echo \"Deployment completed successfully!\"
+          ]'
+      
+    - name: Wait for deployment
+      run: |
+        # Wait for the command to complete
+        sleep 30
+        echo "Deployment command sent to EC2 instance"

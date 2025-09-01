@@ -1,16 +1,16 @@
-# Production Environment Configuration
-# Copy this file to .env and fill in your actual values
+# Production Environment Configuration for AWS RDS
+# Copy this file to .env on your EC2 server and fill in the actual values
 
 # Django Configuration
 SECRET_KEY=your_very_long_random_secret_key_here
 DEBUG=False
-ALLOWED_HOSTS=your-domain.com,your-ec2-ip.compute.amazonaws.com
+ALLOWED_HOSTS=ec2-3-144-197-215.us-east-2.compute.amazonaws.com
 
-# Database Configuration
-DB_NAME=iatm_conference_db
-DB_USER=iatm_user
-DB_PASSWORD=your_secure_database_password_here
-DB_HOST=localhost
+# Database Configuration (AWS RDS)
+DB_NAME=database-1
+DB_USER=postgres
+DB_PASSWORD=your_rds_postgres_password_here
+DB_HOST=database-1.cxyoqc6cux8c.us-east-2.rds.amazonaws.com
 DB_PORT=5432
 
 # PayPal Configuration (Production)
