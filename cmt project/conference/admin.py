@@ -10,23 +10,15 @@ class TrackInline(admin.TabularInline):
 @admin.register(Conference)
 class ConferenceAdmin(admin.ModelAdmin):
     list_display = ('conference_name', 'start_date', 'end_date', 'location', 'created_at')
-    list_filter = ('start_date', 'location')
-    search_fields = ('conference_name', 'conference_description', 'location')
-    ordering = ('-start_date',)
+    list_filter = ('start_date', 'end_date', 'created_at')
+    search_fields = ('conference_name', 'location')
     prepopulated_fields = {'slug': ('conference_name',)}
-
-    fieldsets = (
-        (None, {
-            'fields': ('conference_name', 'conference_description', 'slug')
-        }),
-        ('Dates & Location', {
-            'fields': ('start_date', 'end_date', 'location')
-        }),
-        ('Meta', {
-            'fields': ('created_at',),
-            'classes': ('collapse',),
-        }),
-    )
-    readonly_fields = ('created_at',)
-
+    ordering = ('-start_date',)
     inlines = [TrackInline]
+
+@admin.register(Track)
+class TrackAdmin(admin.ModelAdmin):
+    list_display = ('name', 'conference')
+    list_filter = ('conference',)
+    search_fields = ('name', 'conference__conference_name')
+    ordering = ('conference', 'name')

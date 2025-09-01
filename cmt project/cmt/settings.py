@@ -12,6 +12,10 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,19 +25,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-c(3gdcj%&6s5rivpao=kg6-r--5&y0sv0k1#4ob8@4#=7^o#dg'
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-c(3gdcj%&6s5rivpao=kg6-r--5&y0sv0k1#4ob8@4#=7^o#dg')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DJANGO_DEBUG', 'False').lower() == 'true'
-ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '').split(',') if os.environ.get('DJANGO_ALLOWED_HOSTS') else []
-CSRF_TRUSTED_ORIGINS = [o for o in os.environ.get('DJANGO_CSRF_TRUSTED_ORIGINS', '').split(',') if o]
+DEBUG = os.getenv('DEBUG', 'True').lower() == 'true'
 
-# Security settings for reverse proxy / HTTPS (ALB/ELB)
-# Trust X-Forwarded-Proto from the proxy to detect HTTPS
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-# Use secure cookies in non-debug environments
-SESSION_COOKIE_SECURE = not DEBUG
-CSRF_COOKIE_SECURE = not DEBUG
+ALLOWED_HOSTS = []
 
 
 # Application definition
@@ -107,14 +104,14 @@ WSGI_APPLICATION = 'cmt.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
-	'default': {
-		'ENGINE': 'django.db.backends.postgresql',
-		'NAME': os.environ.get('POSTGRES_DB', 'iatm_conference_db'),
-		'USER': os.environ.get('POSTGRES_USER', 'iatm_user'),
-		'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'testing1234'),
-		'HOST': os.environ.get('POSTGRES_HOST', 'localhost'),
-		'PORT': os.environ.get('POSTGRES_PORT', '5432'),
-	}
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'iatm_conference_db',  # database name
+        'USER': 'iatm_user',  
+        'PASSWORD': 'testing1234',  
+        'HOST': 'localhost',  # database host
+        'PORT': '5432',  # database port
+    }
 }
 
 
@@ -153,7 +150,6 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -163,7 +159,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 #for file upload
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-
 
 
 

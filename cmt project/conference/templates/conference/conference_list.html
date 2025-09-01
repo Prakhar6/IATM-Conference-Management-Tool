@@ -1,5 +1,6 @@
 {% extends 'dashboard.html' %}
-{% load static%}
+{% load static %}
+{% load membership_tags %}
 {% block content %}
 
 <div class="conference-hero mb-5">
@@ -86,11 +87,34 @@
                             <!-- Action Buttons -->
                             <div class="col-lg-4">
                                 <div class="conference-actions">
-                                    <a href="{% url 'create_submission' conference.slug %}" 
-                                       class="btn btn-primary btn-lg btn-submit">
-                                        <i class="fas fa-upload me-2"></i>
-                                        Submit Paper
-                                    </a>
+                                    {% if user.is_authenticated %}
+                                        {% if user|has_conference_access:conference %}
+                                            <!-- User has paid access - show submit button -->
+                                            <a href="{% url 'create_submission' conference.slug %}" 
+                                               class="btn btn-primary btn-lg btn-submit">
+                                                <i class="fas fa-upload me-2"></i>
+                                                Submit Paper
+                                            </a>
+                                        {% else %}
+                                            <!-- User hasn't paid - show payment button -->
+                                            <a href="{% url 'payment_checkout' conference.slug %}" 
+                                               class="btn btn-success btn-lg btn-payment">
+                                                <i class="fas fa-credit-card me-2"></i>
+                                                {% if user.occupation == 'student_undergraduate' or user.occupation == 'student_graduate' %}
+                                                    Register (Student: $50)
+                                                {% else %}
+                                                    Register (Regular: $100)
+                                                {% endif %}
+                                            </a>
+                                        {% endif %}
+                                    {% else %}
+                                        <!-- User not logged in -->
+                                        <a href="{% url 'login' %}" class="btn btn-outline-primary btn-register">
+                                            <i class="fas fa-sign-in-alt me-2"></i>
+                                            Login to Register
+                                        </a>
+                                    {% endif %}
+                                    
                                     <a href="{% url 'conference_detail' conference.slug %}" 
                                        class="btn btn-outline-secondary btn-details">
                                         <i class="fas fa-info-circle me-2"></i>

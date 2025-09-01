@@ -24,4 +24,4 @@ class Membership(models.Model):
         unique_together = ('user', 'conference')
 
     def __str__(self):
-        return f"{self.user.username} - {self.conference.conference_name} ({self.role1}, {self.role2})"
+        return f"{self.user.email} - {self.conference.conference_name} ({self.role1}, {self.role2})"

@@ -1,0 +1,57 @@
+# Django
+*.log
+*.pot
+*.pyc
+__pycache__/
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Environment variables (CRITICAL - NEVER commit these!)
+.env
+.env.local
+.env.production
+.env.staging
+
+# Media files
+media/
+uploads/
+
+# Static files (will be collected)
+staticfiles/
+
+# Virtual environment
+venv/
+env/
+.venv/
+.env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Database
+*.db
+*.sqlite3
+
+# Logs
+logs/
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+
+# Backup files
+*.bak
+*.backup
+
+# PayPal credentials (extra safety)
+paypal_credentials.txt
+secrets.txt

@@ -1,5 +1,6 @@
 {% extends 'dashboard.html' %}
 {% load static %}
+{% load membership_tags %}
 
 {% block title %}{{ conference.conference_name }} - {{ block.super }}{% endblock %}
 
@@ -96,23 +97,71 @@
                         
                         <!-- Action Buttons -->
                         <div class="col-lg-4">
-                            <div class="conference-actions">
-                                <a href="{% url 'create_submission' slug=conference.slug %}" 
-                                   class="btn btn-primary btn-lg btn-submit">
-                                    <i class="fas fa-upload me-2"></i>
-                                    Submit Paper
-                                </a>
-                                <a href="{% url 'register_for_conference' conference.slug %}" 
-                                   class="btn btn-outline-primary btn-register">
-                                    <i class="fas fa-user-plus me-2"></i>
-                                    Register for Conference
-                                </a>
-                                <a href="{% url 'conference_list' %}" 
-                                   class="btn btn-outline-secondary btn-back">
-                                    <i class="fas fa-arrow-left me-2"></i>
-                                    Back to All Conferences
-                                </a>
-                            </div>
+                                                         <div class="conference-actions">
+                                 {% if user.is_authenticated %}
+                                     {% if user|has_conference_access:conference %}
+                                         <!-- User has paid access - show all features -->
+                                         <div class="alert alert-success mb-3">
+                                             <i class="fas fa-check-circle me-2"></i>
+                                             <strong>Access Granted!</strong><br>
+                                             You have full access to this conference.
+                                         </div>
+                                         
+                                         <a href="{% url 'create_submission' slug=conference.slug %}" 
+                                            class="btn btn-primary btn-lg btn-submit">
+                                             <i class="fas fa-upload me-2"></i>
+                                             Submit Paper
+                                         </a>
+                                         
+                                         <a href="{% url 'conference_list' %}" 
+                                            class="btn btn-outline-secondary btn-back">
+                                             <i class="fas fa-arrow-left me-2"></i>
+                                             Back to All Conferences
+                                         </a>
+                                     {% else %}
+                                         <!-- User hasn't paid - show payment button and restrict features -->
+                                         <div class="alert alert-warning mb-3">
+                                             <i class="fas fa-lock me-2"></i>
+                                             <strong>Access Restricted</strong><br>
+                                             You need to register to access conference features.
+                                         </div>
+                                         
+                                         <a href="{% url 'payment_checkout' slug=conference.slug %}"
+                                            class="btn btn-success btn-lg btn-payment">
+                                             <i class="fas fa-credit-card me-2"></i>
+                                             {% if user.occupation == 'student_undergraduate' or user.occupation == 'student_graduate' %}
+                                                 Register (Student: $50)
+                                             {% else %}
+                                                 Register (Regular: $100)
+                                             {% endif %}
+                                         </a>
+                                         
+                                         <a href="{% url 'conference_list' %}" 
+                                            class="btn btn-outline-secondary btn-back">
+                                             <i class="fas fa-arrow-left me-2"></i>
+                                             Back to All Conferences
+                                         </a>
+                                     {% endif %}
+                                 {% else %}
+                                     <!-- User not logged in -->
+                                     <div class="alert alert-info mb-3">
+                                         <i class="fas fa-info-circle me-2"></i>
+                                         <strong>Login Required</strong><br>
+                                         Please login to register for this conference.
+                                     </div>
+                                     
+                                     <a href="{% url 'login' %}" class="btn btn-outline-primary btn-register">
+                                         <i class="fas fa-sign-in-alt me-2"></i>
+                                         Login to Register
+                                     </a>
+                                     
+                                     <a href="{% url 'conference_list' %}" 
+                                        class="btn btn-outline-secondary btn-back">
+                                         <i class="fas fa-arrow-left me-2"></i>
+                                         Back to All Conferences
+                                     </a>
+                                 {% endif %}
+                             </div>
                         </div>
                     </div>
                 </div>
@@ -326,6 +375,19 @@
     background: #6c757d;
     color: white;
     transform: translateY(-2px);
+    text-decoration: none;
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+    border: none;
+}
+
+.btn-success:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(40, 167, 69, 0.3);
+    color: white;
     text-decoration: none;
 }
 

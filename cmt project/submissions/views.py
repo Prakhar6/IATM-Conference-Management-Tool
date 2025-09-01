@@ -7,10 +7,12 @@ from .models import Submissions
 from conference.models import Conference
 from membership.models import Membership, Role
 from review.models import Review
+from .decorators import require_paid_membership
 import os
 
 
 @login_required
+@require_paid_membership
 def create_submission(request, slug):
     conference = get_object_or_404(Conference, slug=slug)
 

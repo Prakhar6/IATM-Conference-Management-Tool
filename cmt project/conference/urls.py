@@ -7,5 +7,7 @@ urlpatterns = [
     path('<slug:slug>/', views.conference_detail_view, name = 'conference_detail'),
     path('register/<slug:slug>/', register_for_conference, name='register_for_conference'),
     path('<slug:slug>/admin-dashboard/', admin_conference_dashboard_view, name='admin_conference_dashboard'),
-
+    path('payment/<slug:slug>/', views.payment_checkout, name='payment_checkout'),
+    path('payment/<slug:slug>/success/', views.payment_success, name='payment_success'),
+    path('payment/<slug:slug>/cancel/', views.payment_cancel, name='payment_cancel'),
 ]

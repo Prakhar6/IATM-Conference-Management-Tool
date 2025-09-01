@@ -1,0 +1,19 @@
+[Unit]
+Description=IATM Conference Management Tool
+After=network.target
+
+[Service]
+Type=notify
+User=ubuntu
+Group=ubuntu
+RuntimeDirectory=iatm-cmt
+WorkingDirectory=/home/ubuntu/IATM-Conference-Management-Tool/cmt project
+Environment="PATH=/home/ubuntu/IATM-Conference-Management-Tool/.venv/bin"
+ExecStart=/home/ubuntu/IATM-Conference-Management-Tool/.venv/bin/gunicorn --config gunicorn_config.py cmt.wsgi:application
+ExecReload=/bin/kill -s HUP $MAINPID
+KillMode=mixed
+TimeoutStopSec=5
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

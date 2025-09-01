@@ -1,0 +1,30 @@
+# Production Requirements for IATM Conference Management Tool
+
+# Core Django
+Django>=4.2.0,<5.0.0
+
+# Database
+psycopg2-binary>=2.9.0
+
+# Forms and UI
+django-crispy-forms>=2.0
+crispy-bootstrap5>=0.7
+
+# Production web server (choose one)
+gunicorn>=21.0.0
+# uwsgi>=2.0.0  # Alternative to gunicorn
+
+# Static files handling
+whitenoise>=6.0.0
+
+# Security
+django-cors-headers>=4.0.0
+
+# Environment variables
+python-dotenv>=1.0.0
+
+# Logging and monitoring
+sentry-sdk>=1.0.0
+
+# Production utilities
+django-extensions>=3.2.0

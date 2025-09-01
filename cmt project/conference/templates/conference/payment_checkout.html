@@ -1,0 +1,267 @@
+{% extends 'dashboard.html' %}
+{% load static %}
+
+{% block title %}Payment Checkout - {{ conference.conference_name }} - {{ block.super }}{% endblock %}
+
+{% block content %}
+
+<div class="payment-hero mb-5">
+    <div class="hero-content text-center">
+        <h1 class="hero-title">
+            <i class="fas fa-credit-card me-3"></i>
+            Conference Registration
+        </h1>
+        <p class="hero-subtitle">Complete your registration for {{ conference.conference_name }}</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="payment-card">
+                <div class="payment-card-header">
+                    <h3 class="payment-title">
+                        <i class="fas fa-calendar-alt me-2"></i>
+                        {{ conference.conference_name }}
+                    </h3>
+                </div>
+                
+                <div class="payment-card-body">
+                    <div class="conference-summary mb-4">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="summary-item">
+                                    <i class="fas fa-calendar-day"></i>
+                                    <div>
+                                        <span class="label">Start Date</span>
+                                        <span class="value">{{ conference.start_date|date:"F j, Y" }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="summary-item">
+                                    <i class="fas fa-calendar-check"></i>
+                                    <div>
+                                        <span class="label">End Date</span>
+                                        <span class="value">{{ conference.end_date|date:"F j, Y" }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="summary-item">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    <div>
+                                        <span class="label">Location</span>
+                                        <span class="value">{{ conference.location }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="summary-item">
+                                    <i class="fas fa-user-tag"></i>
+                                    <div>
+                                        <span class="label">Registration Type</span>
+                                        <span class="value">{{ price_type }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="pricing-section mb-4">
+                        <div class="pricing-card">
+                            <div class="pricing-header">
+                                <h4 class="pricing-title">{{ price_type }} Registration</h4>
+                                <div class="pricing-amount">
+                                    <span class="currency">$</span>
+                                    <span class="amount">{{ amount }}</span>
+                                    <span class="period">USD</span>
+                                </div>
+                            </div>
+                            <div class="pricing-features">
+                                <ul>
+                                    <li><i class="fas fa-check text-success"></i> Full conference access</li>
+                                    <li><i class="fas fa-check text-success"></i> Paper submission rights</li>
+                                    <li><i class="fas fa-check text-success"></i> Review participation</li>
+                                    <li><i class="fas fa-check text-success"></i> Conference materials</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="payment-form">
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="alert alert-success">
+                                <i class="fas fa-credit-card me-2"></i>
+                                <strong>PayPal Integration Active</strong><br>
+                                Click the button below to complete your payment securely through PayPal.
+                            </div>
+                            
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-success btn-lg btn-pay">
+                                    <i class="fab fa-paypal me-2"></i>
+                                    Pay with PayPal (${{ amount }})
+                                </button>
+                                <a href="{% url 'conference_detail' conference.slug %}" class="btn btn-outline-secondary btn-cancel">
+                                    <i class="fas fa-arrow-left me-2"></i>
+                                    Back to Conference
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.payment-hero {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    padding: 3rem 0;
+    margin: -2rem -2rem 3rem -2rem;
+    border-radius: 0 0 2rem 2rem;
+    color: white;
+}
+
+.payment-card {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    border: 1px solid rgba(40, 167, 69, 0.1);
+}
+
+.payment-card-header {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+    padding: 2rem;
+    text-align: center;
+}
+
+.payment-title {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.payment-card-body {
+    padding: 2rem;
+}
+
+.conference-summary {
+    background: #f8f9fa;
+    border-radius: 15px;
+    padding: 1.5rem;
+}
+
+.summary-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.summary-item i {
+    color: #28a745;
+    font-size: 1.2rem;
+    width: 20px;
+}
+
+.summary-item .label {
+    display: block;
+    font-size: 0.8rem;
+    color: #6c757d;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+.summary-item .value {
+    display: block;
+    font-size: 1rem;
+    color: #2c3e50;
+    font-weight: 500;
+}
+
+.pricing-card {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+    border-radius: 15px;
+    padding: 2rem;
+    text-align: center;
+}
+
+.pricing-title {
+    margin-bottom: 1rem;
+    font-size: 1.3rem;
+}
+
+.pricing-amount {
+    margin-bottom: 1.5rem;
+}
+
+.pricing-amount .currency {
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.pricing-amount .amount {
+    font-size: 3rem;
+    font-weight: 700;
+    margin: 0 0.5rem;
+}
+
+.pricing-amount .period {
+    font-size: 1rem;
+    opacity: 0.8;
+}
+
+.pricing-features ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.pricing-features li {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.pricing-features li:last-child {
+    border-bottom: none;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.btn-pay {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    border: none;
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+}
+
+.btn-pay:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(40, 167, 69, 0.3);
+}
+
+@media (max-width: 768px) {
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .btn {
+        width: 100%;
+    }
+}
+</style>
+
+{% endblock %}
