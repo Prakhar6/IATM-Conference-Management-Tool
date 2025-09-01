@@ -27,17 +27,14 @@ jobs:
           --instance-ids "${{ secrets.EC2_INSTANCE_ID }}" \
           --document-name "AWS-RunShellScript" \
           --parameters 'commands=[
+            "if [ ! -d /srv/iatm/.git ]; then",
+            "  cd /srv",
+            "  git clone https://github.com/Prakhar6/IATM-Conference-Management-Tool.git iatm",
+            "fi",
             "cd /srv/iatm",
             "git pull origin main",
-            "cd \"cmt project\"",
-            "pip install -r requirements.txt",
-            "python manage.py migrate",
-            "python manage.py collectstatic --noinput",
-            "cd ..",
-            "docker stop iatm-app-1",
-            "docker rm iatm-app-1",
-            "docker build -t iatm:latest .",
-            "docker run -d --name iatm-app-1 -p 8000:8000 iatm:latest",
+            "docker-compose down",
+            "docker-compose up -d --build",
             "echo \"Deployment completed successfully!\"
           ]'
       
