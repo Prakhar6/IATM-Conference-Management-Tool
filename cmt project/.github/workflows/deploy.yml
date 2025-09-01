@@ -27,7 +27,7 @@ jobs:
           --instance-ids "${{ secrets.EC2_INSTANCE_ID }}" \
           --document-name "AWS-RunShellScript" \
           --parameters 'commands=[
-            "cd ~/IATM-Conference-Management-Tool",
+            "cd /srv/iatm",
             "git pull origin main",
             "cd \"cmt project\"",
             "pip install -r requirements.txt",
