@@ -33,7 +33,7 @@ jobs:
             "pip install -r requirements.txt",
             "python manage.py migrate",
             "python manage.py collectstatic --noinput",
-            "sudo systemctl restart iatm-cmt",
+            "docker restart iatm-app-1",
             "echo \"Deployment completed successfully!\"
           ]'
       
