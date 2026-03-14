@@ -1,0 +1,118 @@
+{% extends 'dashboard.html' %}
+
+{% block title %}Analytics - {{ conference.conference_name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
+    <div>
+        <h2 style="font-weight: 700; color: #1e293b;">
+            <i class="fas fa-chart-bar me-2" style="color: #667eea;"></i>Conference Analytics
+        </h2>
+        <p class="text-muted mb-0">{{ conference.conference_name }}</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'export_attendees' conference.slug %}" class="btn btn-outline-primary btn-sm">
+            <i class="fas fa-download me-1"></i>Export Attendees
+        </a>
+        <a href="{% url 'export_financials' conference.slug %}" class="btn btn-outline-success btn-sm">
+            <i class="fas fa-download me-1"></i>Export Financials
+        </a>
+    </div>
+</div>
+
+<!-- Key Metrics -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm" style="border-radius: 12px;">
+            <div class="card-body text-center">
+                <div class="fs-2 fw-bold" style="color: #667eea;">{{ total_registrations }}</div>
+                <div class="text-muted small">Total Registrations</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm" style="border-radius: 12px;">
+            <div class="card-body text-center">
+                <div class="fs-2 fw-bold text-success">{{ paid_registrations }}</div>
+                <div class="text-muted small">Paid Registrations</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm" style="border-radius: 12px;">
+            <div class="card-body text-center">
+                <div class="fs-2 fw-bold text-warning">{{ unpaid_registrations }}</div>
+                <div class="text-muted small">Pending Payment</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm" style="border-radius: 12px;">
+            <div class="card-body text-center">
+                <div class="fs-2 fw-bold text-success">${{ total_revenue }}</div>
+                <div class="text-muted small">Total Revenue</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Role Breakdown -->
+    <div class="col-12 col-md-4">
+        <div class="card border-0 shadow-sm" style="border-radius: 16px;">
+            <div class="card-header bg-white border-0 pt-4 px-4">
+                <h5 class="fw-bold"><i class="fas fa-users me-2" style="color: #667eea;"></i>Roles</h5>
+            </div>
+            <div class="card-body px-4">
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Authors</span><span class="badge bg-primary">{{ authors }}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Reviewers</span><span class="badge bg-info">{{ reviewers }}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Chairs</span><span class="badge bg-warning text-dark">{{ chairs }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Geography -->
+    <div class="col-12 col-md-4">
+        <div class="card border-0 shadow-sm" style="border-radius: 16px;">
+            <div class="card-header bg-white border-0 pt-4 px-4">
+                <h5 class="fw-bold"><i class="fas fa-globe me-2" style="color: #667eea;"></i>Top Countries</h5>
+            </div>
+            <div class="card-body px-4">
+                {% for c in country_stats %}
+                <div class="d-flex justify-content-between mb-2">
+                    <span>{{ c.user__country|default:"Not specified" }}</span>
+                    <span class="badge bg-secondary">{{ c.count }}</span>
+                </div>
+                {% empty %}
+                <p class="text-muted small">No data yet</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Occupation Breakdown -->
+    <div class="col-12 col-md-4">
+        <div class="card border-0 shadow-sm" style="border-radius: 16px;">
+            <div class="card-header bg-white border-0 pt-4 px-4">
+                <h5 class="fw-bold"><i class="fas fa-briefcase me-2" style="color: #667eea;"></i>Occupations</h5>
+            </div>
+            <div class="card-body px-4">
+                {% for o in occupation_stats %}
+                <div class="d-flex justify-content-between mb-2">
+                    <span>{{ o.user__occupation|default:"Other" }}</span>
+                    <span class="badge bg-secondary">{{ o.count }}</span>
+                </div>
+                {% empty %}
+                <p class="text-muted small">No data yet</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

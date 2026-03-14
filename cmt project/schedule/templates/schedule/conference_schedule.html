@@ -1,0 +1,140 @@
+{% extends 'dashboard.html' %}
+
+{% block title %}Schedule - {{ conference.conference_name }}{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h2 style="font-weight: 700; color: #1e293b;">
+        <i class="fas fa-calendar-alt me-2" style="color: #667eea;"></i>{{ conference.conference_name }} - Schedule
+    </h2>
+    <p class="text-muted">{{ conference.start_date|date:"M j" }} - {{ conference.end_date|date:"M j, Y" }} | {{ conference.location }}</p>
+</div>
+
+<!-- Time Zone Toggle -->
+<div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
+    <div class="card-body py-2 px-3 d-flex align-items-center gap-3 flex-wrap">
+        <span class="fw-semibold text-muted small"><i class="fas fa-globe me-1"></i>Time Zone:</span>
+        <button class="btn btn-sm btn-outline-primary tz-btn active" data-tz="event" onclick="setTimezone('event')">Event Local (UTC)</button>
+        <button class="btn btn-sm btn-outline-primary tz-btn" data-tz="local" onclick="setTimezone('local')">My Local Time</button>
+        <span class="ms-auto text-muted small" id="tz-display"></span>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
+    <div class="card-body py-2 px-3">
+        <form method="get" class="d-flex gap-3 align-items-center flex-wrap">
+            <select name="date" class="form-select form-select-sm schedule-filter-select" onchange="this.form.submit()">
+                <option value="">All Dates</option>
+                {% for d in available_dates %}
+                <option value="{{ d|date:'Y-m-d' }}" {% if date_filter == d|date:'Y-m-d' %}selected{% endif %}>{{ d|date:"l, M j" }}</option>
+                {% endfor %}
+            </select>
+            <select name="track" class="form-select form-select-sm schedule-filter-select" onchange="this.form.submit()">
+                <option value="">All Tracks</option>
+                {% for t in tracks %}
+                <option value="{{ t.id }}" {% if track_filter == t.id|stringformat:"d" %}selected{% endif %}>{{ t.name }}</option>
+                {% endfor %}
+            </select>
+            <select name="type" class="form-select form-select-sm schedule-filter-select" onchange="this.form.submit()">
+                <option value="">All Types</option>
+                {% for value, label in session_types %}
+                <option value="{{ value }}" {% if type_filter == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+            {% if track_filter or type_filter or date_filter %}
+            <a href="{% url 'conference_schedule' conference.slug %}" class="btn btn-sm btn-outline-secondary">Clear Filters</a>
+            {% endif %}
+        </form>
+    </div>
+</div>
+
+<!-- Schedule -->
+{% if sessions_by_date %}
+{% for date, sessions in sessions_by_date.items %}
+<div class="mb-4">
+    <h4 class="fw-bold mb-3" style="color: #667eea;">
+        <i class="fas fa-calendar-day me-2"></i>{{ date|date:"l, F j, Y" }}
+    </h4>
+    {% for session in sessions %}
+    <div class="card border-0 shadow-sm mb-3" style="border-radius: 12px; border-left: 4px solid {% if session.session_type == 'keynote' %}#667eea{% elif session.session_type == 'break' %}#f59e0b{% elif session.session_type == 'workshop' %}#10b981{% else %}#64748b{% endif %} !important;">
+        <div class="card-body py-3">
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                <div class="flex-grow-1">
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <span class="badge bg-{% if session.session_type == 'keynote' %}primary{% elif session.session_type == 'break' %}warning text-dark{% elif session.session_type == 'workshop' %}success{% else %}secondary{% endif %}">{{ session.get_session_type_display }}</span>
+                        {% if session.track %}<span class="badge bg-light text-dark">{{ session.track.name }}</span>{% endif %}
+                        {% if session.room %}<span class="text-muted small"><i class="fas fa-door-open me-1"></i>{{ session.room }}</span>{% endif %}
+                    </div>
+                    <h5 class="fw-bold mb-1">{{ session.title }}</h5>
+                    {% if session.description %}<p class="text-muted mb-1 small">{{ session.description|truncatewords:30 }}</p>{% endif %}
+                    {% if session.speakers.all %}
+                    <div class="small text-muted">
+                        <i class="fas fa-user-tie me-1"></i>
+                        {% for speaker in session.speakers.all %}{{ speaker.get_full_name }}{% if not forloop.last %}, {% endif %}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="text-end">
+                    <div class="fw-bold" style="color: #667eea;">
+                        <span class="session-time" data-utc="{{ session.start_time|date:'c' }}">{{ session.start_time|date:"g:i A" }}</span>
+                        -
+                        <span class="session-time" data-utc="{{ session.end_time|date:'c' }}">{{ session.end_time|date:"g:i A" }}</span>
+                    </div>
+                    <div class="text-muted small">{{ session.duration_minutes }} min</div>
+                    {% if session.zoom_meeting_url and is_registered %}
+                    <a href="{% url 'join_session' session.id %}" class="btn btn-sm btn-primary mt-1" target="_blank">
+                        <i class="fas fa-video me-1"></i>Join
+                    </a>
+                    {% elif session.zoom_meeting_url %}
+                    <span class="badge bg-light text-muted mt-1"><i class="fas fa-lock me-1"></i>Registered only</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endfor %}
+{% else %}
+<div class="text-center py-5">
+    <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+    <p class="text-muted">No sessions found matching your filters.</p>
+</div>
+{% endif %}
+
+<style>
+.schedule-filter-select { width: auto; }
+
+@media (max-width: 576px) {
+    .schedule-filter-select { width: 100%; }
+}
+</style>
+
+<script>
+// Time zone toggle
+function setTimezone(mode) {
+    document.querySelectorAll('.tz-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector(`.tz-btn[data-tz="${mode}"]`).classList.add('active');
+
+    const times = document.querySelectorAll('.session-time');
+    const display = document.getElementById('tz-display');
+
+    if (mode === 'local') {
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        display.textContent = tz;
+        times.forEach(el => {
+            const utc = new Date(el.dataset.utc);
+            el.textContent = utc.toLocaleTimeString([], {hour: 'numeric', minute: '2-digit'});
+        });
+    } else {
+        display.textContent = 'UTC (Event Time)';
+        times.forEach(el => {
+            const utc = new Date(el.dataset.utc);
+            el.textContent = utc.toLocaleTimeString('en-US', {hour: 'numeric', minute: '2-digit', timeZone: 'UTC'});
+        });
+    }
+}
+document.addEventListener('DOMContentLoaded', () => setTimezone('event'));
+</script>
+{% endblock %}

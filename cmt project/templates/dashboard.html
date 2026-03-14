@@ -341,6 +341,11 @@
         <div class="nav-section">
             <div class="nav-section-title">Main Menu</div>
             <div class="nav-item">
+                <a class="nav-link" href="{% url 'user_dashboard' %}">
+                    <i class="fas fa-tachometer-alt"></i>Dashboard
+                </a>
+            </div>
+            <div class="nav-item">
                 <a class="nav-link" href="{% url 'profile' %}">
                     <i class="fas fa-user"></i>My Profile
                 </a>
@@ -348,6 +353,11 @@
             <div class="nav-item">
                 <a class="nav-link" href="{% url 'conference_list' %}">
                     <i class="fas fa-calendar-alt"></i>Conferences
+                </a>
+            </div>
+            <div class="nav-item">
+                <a class="nav-link" href="{% url 'proceedings_list' %}">
+                    <i class="fas fa-book-open"></i>Proceedings
                 </a>
             </div>
             <div class="nav-item">
@@ -385,6 +395,24 @@
                 </a>
             </div>
             {% endif %}
+        </div>
+
+        <!-- Language -->
+        <div class="nav-section">
+            <div class="nav-section-title">Language</div>
+            <div class="nav-item px-3">
+                <form action="{% url 'set_language' %}" method="post" id="lang-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.path }}">
+                    <select name="language" class="form-select form-select-sm" style="background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2);" onchange="document.getElementById('lang-form').submit()">
+                        <option value="en" {% if LANGUAGE_CODE == 'en' %}selected{% endif %}>English</option>
+                        <option value="es" {% if LANGUAGE_CODE == 'es' %}selected{% endif %}>Espa&ntilde;ol</option>
+                        <option value="fr" {% if LANGUAGE_CODE == 'fr' %}selected{% endif %}>Fran&ccedil;ais</option>
+                        <option value="zh-hans" {% if LANGUAGE_CODE == 'zh-hans' %}selected{% endif %}>中文</option>
+                        <option value="ar" {% if LANGUAGE_CODE == 'ar' %}selected{% endif %}>العربية</option>
+                    </select>
+                </form>
+            </div>
         </div>
 
         <!-- Account Actions -->

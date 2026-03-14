@@ -6,6 +6,9 @@ requests==2.31.0
 paypal-checkout-sdk==1.2.2
 python-dotenv==1.1.1
 pydantic[email]
+reportlab==4.1.0
+qrcode[pil]==7.4.2
+Pillow==10.2.0
 
 # Production requirements
 gunicorn==21.2.0

@@ -12,12 +12,18 @@
             Conference Registration
         </h1>
         <p class="hero-subtitle">Complete your registration for {{ conference.conference_name }}</p>
+        {% if is_early_bird %}
+        <span class="badge bg-warning text-dark fs-6 mt-2"><i class="fas fa-clock me-1"></i> Early Bird Pricing Active</span>
+        {% endif %}
+        {% if is_member %}
+        <span class="badge bg-info fs-6 mt-2 ms-2"><i class="fas fa-star me-1"></i> IATM Member Discount Applied</span>
+        {% endif %}
     </div>
 </div>
 
 <div class="container">
     <div class="row justify-content-center">
-        <div class="col-lg-8">
+        <div class="col-lg-10">
             <div class="payment-card">
                 <div class="payment-card-header">
                     <h3 class="payment-title">
@@ -25,31 +31,20 @@
                         {{ conference.conference_name }}
                     </h3>
                 </div>
-                
+
                 <div class="payment-card-body">
                     <div class="conference-summary mb-4">
                         <div class="row">
-                            <div class="col-md-6">
+                            <div class="col-12 col-md-4">
                                 <div class="summary-item">
                                     <i class="fas fa-calendar-day"></i>
                                     <div>
-                                        <span class="label">Start Date</span>
-                                        <span class="value">{{ conference.start_date|date:"F j, Y" }}</span>
+                                        <span class="label">Dates</span>
+                                        <span class="value">{{ conference.start_date|date:"M j" }} - {{ conference.end_date|date:"M j, Y" }}</span>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                <div class="summary-item">
-                                    <i class="fas fa-calendar-check"></i>
-                                    <div>
-                                        <span class="label">End Date</span>
-                                        <span class="value">{{ conference.end_date|date:"F j, Y" }}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6">
+                            <div class="col-12 col-md-4">
                                 <div class="summary-item">
                                     <i class="fas fa-map-marker-alt"></i>
                                     <div>
@@ -58,60 +53,93 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-12 col-md-4">
                                 <div class="summary-item">
-                                    <i class="fas fa-user-tag"></i>
+                                    <i class="fas fa-user"></i>
                                     <div>
-                                        <span class="label">Registration Type</span>
-                                        <span class="value">{{ price_type }}</span>
+                                        <span class="label">Registrant</span>
+                                        <span class="value">{{ request.user.get_full_name }}</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    
-                    <div class="pricing-section mb-4">
-                        <div class="pricing-card">
-                            <div class="pricing-header">
-                                <h4 class="pricing-title">{{ price_type }} Registration</h4>
-                                <div class="pricing-amount">
-                                    <span class="currency">$</span>
-                                    <span class="amount">{{ amount }}</span>
-                                    <span class="period">USD</span>
+
+                    <form method="post">
+                        {% csrf_token %}
+
+                        {% if tier_pricing %}
+                        <!-- Tiered pricing -->
+                        <h4 class="mb-3"><i class="fas fa-tags me-2"></i>Select Registration Tier</h4>
+                        <div class="row g-3 mb-4">
+                            {% for tp in tier_pricing %}
+                            <div class="col-12 col-md-6 col-lg-{% if tier_pricing|length == 3 %}4{% elif tier_pricing|length == 2 %}6{% else %}6{% endif %}">
+                                <label class="tier-card w-100" for="tier_{{ tp.tier.id }}">
+                                    <input type="radio" name="tier_id" value="{{ tp.tier.id }}" id="tier_{{ tp.tier.id }}" class="tier-radio" {% if forloop.first %}checked{% endif %}>
+                                    <div class="tier-card-inner">
+                                        <h5 class="tier-name">{{ tp.tier.name }}</h5>
+                                        {% if tp.is_discounted %}
+                                        <div class="tier-original-price"><s>${{ tp.original_price }}</s></div>
+                                        {% endif %}
+                                        <div class="tier-price">
+                                            <span class="currency">$</span>
+                                            <span class="amount">{{ tp.price }}</span>
+                                            <span class="period">USD</span>
+                                        </div>
+                                        {% if tp.tier.description %}
+                                        <p class="tier-desc">{{ tp.tier.description }}</p>
+                                        {% endif %}
+                                        <ul class="tier-features">
+                                            <li><i class="fas fa-check text-success"></i> Full conference access</li>
+                                            <li><i class="fas fa-check text-success"></i> Paper submission rights</li>
+                                            <li><i class="fas fa-check text-success"></i> Conference materials</li>
+                                        </ul>
+                                    </div>
+                                </label>
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        {% else %}
+                        <!-- Legacy pricing (no tiers configured) -->
+                        <div class="pricing-section mb-4">
+                            <div class="pricing-card">
+                                <div class="pricing-header">
+                                    <h4 class="pricing-title">{{ price_type }} Registration</h4>
+                                    <div class="pricing-amount">
+                                        <span class="currency">$</span>
+                                        <span class="amount">{{ amount }}</span>
+                                        <span class="period">USD</span>
+                                    </div>
+                                </div>
+                                <div class="pricing-features">
+                                    <ul>
+                                        <li><i class="fas fa-check text-success"></i> Full conference access</li>
+                                        <li><i class="fas fa-check text-success"></i> Paper submission rights</li>
+                                        <li><i class="fas fa-check text-success"></i> Review participation</li>
+                                        <li><i class="fas fa-check text-success"></i> Conference materials</li>
+                                    </ul>
                                 </div>
                             </div>
-                            <div class="pricing-features">
-                                <ul>
-                                    <li><i class="fas fa-check text-success"></i> Full conference access</li>
-                                    <li><i class="fas fa-check text-success"></i> Paper submission rights</li>
-                                    <li><i class="fas fa-check text-success"></i> Review participation</li>
-                                    <li><i class="fas fa-check text-success"></i> Conference materials</li>
-                                </ul>
-                            </div>
                         </div>
-                    </div>
-                    
-                    <div class="payment-form">
-                        <form method="post">
-                            {% csrf_token %}
-                            <div class="alert alert-success">
-                                <i class="fas fa-credit-card me-2"></i>
-                                <strong>PayPal Integration Active</strong><br>
-                                Click the button below to complete your payment securely through PayPal.
-                            </div>
-                            
-                            <div class="form-actions">
-                                <button type="submit" class="btn btn-success btn-lg btn-pay">
-                                    <i class="fab fa-paypal me-2"></i>
-                                    Pay with PayPal (${{ amount }})
-                                </button>
-                                <a href="{% url 'conference_detail' conference.slug %}" class="btn btn-outline-secondary btn-cancel">
-                                    <i class="fas fa-arrow-left me-2"></i>
-                                    Back to Conference
-                                </a>
-                            </div>
-                        </form>
-                    </div>
+                        {% endif %}
+
+                        <div class="alert alert-success">
+                            <i class="fas fa-lock me-2"></i>
+                            <strong>Secure Payment via PayPal</strong> - Your payment is processed securely through PayPal.
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-success btn-lg btn-pay">
+                                <i class="fab fa-paypal me-2"></i>
+                                Pay with PayPal
+                            </button>
+                            <a href="{% url 'conference_detail' conference.slug %}" class="btn btn-outline-secondary btn-cancel">
+                                <i class="fas fa-arrow-left me-2"></i>
+                                Back to Conference
+                            </a>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
@@ -142,125 +170,68 @@
     text-align: center;
 }
 
-.payment-title {
-    margin: 0;
-    font-size: 1.5rem;
-    font-weight: 600;
-}
+.payment-title { margin: 0; font-size: 1.5rem; font-weight: 600; }
+.payment-card-body { padding: 2rem; }
+.conference-summary { background: #f8f9fa; border-radius: 15px; padding: 1.5rem; }
+.summary-item { display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem; }
+.summary-item i { color: #28a745; font-size: 1.2rem; width: 20px; }
+.summary-item .label { display: block; font-size: 0.8rem; color: #6c757d; text-transform: uppercase; font-weight: 600; }
+.summary-item .value { display: block; font-size: 1rem; color: #2c3e50; font-weight: 500; }
 
-.payment-card-body {
-    padding: 2rem;
-}
-
-.conference-summary {
-    background: #f8f9fa;
-    border-radius: 15px;
+/* Tier cards */
+.tier-card { cursor: pointer; display: block; }
+.tier-radio { display: none; }
+.tier-card-inner {
+    border: 2px solid #e2e8f0;
+    border-radius: 16px;
     padding: 1.5rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    height: 100%;
 }
-
-.summary-item {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 1rem;
+.tier-radio:checked + .tier-card-inner {
+    border-color: #28a745;
+    background: linear-gradient(135deg, rgba(40, 167, 69, 0.05) 0%, rgba(32, 201, 151, 0.05) 100%);
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.2);
 }
+.tier-card-inner:hover { border-color: #20c997; transform: translateY(-2px); }
+.tier-name { font-size: 1.2rem; font-weight: 700; color: #1e293b; margin-bottom: 0.5rem; }
+.tier-original-price { color: #dc3545; font-size: 0.9rem; }
+.tier-price { margin: 0.5rem 0 1rem; }
+.tier-price .currency { font-size: 1.2rem; font-weight: 600; color: #28a745; }
+.tier-price .amount { font-size: 2.5rem; font-weight: 700; color: #28a745; }
+.tier-price .period { font-size: 0.9rem; color: #6c757d; }
+.tier-desc { font-size: 0.85rem; color: #6c757d; margin-bottom: 1rem; }
+.tier-features { list-style: none; padding: 0; margin: 0; text-align: left; }
+.tier-features li { padding: 0.3rem 0; font-size: 0.9rem; color: #495057; }
 
-.summary-item i {
-    color: #28a745;
-    font-size: 1.2rem;
-    width: 20px;
-}
-
-.summary-item .label {
-    display: block;
-    font-size: 0.8rem;
-    color: #6c757d;
-    text-transform: uppercase;
-    font-weight: 600;
-}
-
-.summary-item .value {
-    display: block;
-    font-size: 1rem;
-    color: #2c3e50;
-    font-weight: 500;
-}
-
+/* Legacy pricing */
 .pricing-card {
     background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-    color: white;
-    border-radius: 15px;
-    padding: 2rem;
-    text-align: center;
+    color: white; border-radius: 15px; padding: 2rem; text-align: center;
 }
+.pricing-title { margin-bottom: 1rem; font-size: 1.3rem; }
+.pricing-amount .currency { font-size: 1.5rem; font-weight: 600; }
+.pricing-amount .amount { font-size: 3rem; font-weight: 700; margin: 0 0.5rem; }
+.pricing-amount .period { font-size: 1rem; opacity: 0.8; }
+.pricing-features ul { list-style: none; padding: 0; margin: 0; }
+.pricing-features li { padding: 0.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.2); }
+.pricing-features li:last-child { border-bottom: none; }
 
-.pricing-title {
-    margin-bottom: 1rem;
-    font-size: 1.3rem;
-}
-
-.pricing-amount {
-    margin-bottom: 1.5rem;
-}
-
-.pricing-amount .currency {
-    font-size: 1.5rem;
-    font-weight: 600;
-}
-
-.pricing-amount .amount {
-    font-size: 3rem;
-    font-weight: 700;
-    margin: 0 0.5rem;
-}
-
-.pricing-amount .period {
-    font-size: 1rem;
-    opacity: 0.8;
-}
-
-.pricing-features ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.pricing-features li {
-    padding: 0.5rem 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.pricing-features li:last-child {
-    border-bottom: none;
-}
-
-.form-actions {
-    display: flex;
-    gap: 1rem;
-    justify-content: center;
-    flex-wrap: wrap;
-}
-
+.form-actions { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
 .btn-pay {
     background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-    border: none;
-    padding: 1rem 2rem;
-    font-size: 1.1rem;
+    border: none; padding: 1rem 2rem; font-size: 1.1rem;
 }
-
-.btn-pay:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(40, 167, 69, 0.3);
-}
+.btn-pay:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(40, 167, 69, 0.3); }
 
 @media (max-width: 768px) {
-    .form-actions {
-        flex-direction: column;
-    }
-    
-    .btn {
-        width: 100%;
-    }
+    .payment-hero { padding: 2rem 1rem; margin: -2rem -1rem 2rem -1rem; }
+    .payment-card-body { padding: 1rem; }
+    .form-actions { flex-direction: column; }
+    .form-actions .btn { width: 100%; }
+    .tier-price .amount { font-size: 2rem; }
+    .pricing-amount .amount { font-size: 2.5rem; }
 }
 </style>
 

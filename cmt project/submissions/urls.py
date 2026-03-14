@@ -6,5 +6,7 @@ urlpatterns = [
     path('<int:pk>/', views.submission_detail, name='submission_detail'),
     path('', views.submission_list, name='submission_list'),
     path('edit/<int:pk>/', views.edit_submission, name='edit_submission'),
-    path('delete/<int:pk>/', views.delete_submission, name='delete_submission')
+    path('delete/<int:pk>/', views.delete_submission, name='delete_submission'),
+    path('proceedings/', views.proceedings_list, name='proceedings_list'),
+    path('proceedings/<slug:slug>/', views.proceedings_conference, name='proceedings_conference'),
 ]

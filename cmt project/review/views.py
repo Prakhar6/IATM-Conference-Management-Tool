@@ -11,6 +11,7 @@ from membership.models import Membership, Role
 from conference.models import Conference
 from .models import Review
 from .forms import ReviewForm, AssignReviewersForm
+from submissions.emails import send_reviewer_assignment, send_review_notification
 
 
 @login_required
@@ -163,13 +164,14 @@ def assign_reviewers_to_submission(request, submission_id):
             # Remove existing assignments for this submission
             Review.objects.filter(submission=submission).delete()
             
-            # Create new review assignments
+            # Create new review assignments and notify reviewers
             for reviewer_membership in selected_reviewers:
-                Review.objects.create(
+                review = Review.objects.create(
                     submission=submission,
                     reviewer=reviewer_membership.user
                 )
-            
+                send_reviewer_assignment(review, request)
+
             messages.success(request, f"Successfully assigned {len(selected_reviewers)} reviewer(s) to '{submission.paper_title}'")
         else:
             messages.warning(request, "No reviewers were selected.")
@@ -232,6 +234,12 @@ def reviewer_dashboard(request):
         is_submitted=True
     ).select_related('submission__membership__conference', 'submission__track').order_by('-date_reviewed')
 
+    # Annotate blind review flag on each review
+    for review in pending_reviews:
+        review.is_blind = review.submission.membership.conference.blind_review
+    for review in submitted_reviews:
+        review.is_blind = review.submission.membership.conference.blind_review
+
     # Calculate stats
     total_reviews = pending_reviews.count() + submitted_reviews.count()
     completion_rate = round((submitted_reviews.count() / total_reviews * 100) if total_reviews > 0 else 0)
@@ -261,7 +269,8 @@ def submit_review(request, review_id):
             review.is_submitted = True
             review.date_reviewed = timezone.now()
             review.save()
-            
+            send_review_notification(review, request)
+
             messages.success(request, "Review submitted successfully.")
             return redirect('reviewer_dashboard')
         else:
@@ -269,10 +278,12 @@ def submit_review(request, review_id):
     else:
         form = ReviewForm(instance=review)
 
+    conference = submission.membership.conference
     context = {
         'form': form,
         'submission': submission,
         'review': review,
+        'blind_review': conference.blind_review,
     }
     return render(request, 'review/submit_review.html', context)
 

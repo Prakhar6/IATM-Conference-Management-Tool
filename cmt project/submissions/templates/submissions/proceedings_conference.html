@@ -1,0 +1,65 @@
+{% extends 'dashboard.html' %}
+
+{% block title %}Proceedings - {{ conference.conference_name }}{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h2 style="font-weight: 700; color: #1e293b;">
+        <i class="fas fa-book-open me-2" style="color: #667eea;"></i>{{ conference.conference_name }}
+    </h2>
+    <p class="text-muted">Accepted Papers</p>
+</div>
+
+<!-- Search & Filter -->
+<div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
+    <div class="card-body py-2 px-3">
+        <form method="get" class="d-flex gap-3 align-items-center flex-wrap">
+            <div class="input-group" style="max-width: 400px;">
+                <input type="text" name="q" class="form-control form-control-sm" placeholder="Search papers or authors..." value="{{ query }}">
+                <button type="submit" class="btn btn-sm btn-primary"><i class="fas fa-search"></i></button>
+            </div>
+            <select name="track" class="form-select form-select-sm" style="width: auto;" onchange="this.form.submit()">
+                <option value="">All Tracks</option>
+                {% for t in tracks %}
+                <option value="{{ t.id }}" {% if track_filter == t.id|stringformat:"d" %}selected{% endif %}>{{ t.name }}</option>
+                {% endfor %}
+            </select>
+            {% if query or track_filter %}
+            <a href="{% url 'proceedings_conference' conference.slug %}" class="btn btn-sm btn-outline-secondary">Clear</a>
+            {% endif %}
+            <span class="ms-auto text-muted small">{{ papers.count }} paper{{ papers.count|pluralize }}</span>
+        </form>
+    </div>
+</div>
+
+{% if papers %}
+{% for paper in papers %}
+<div class="card border-0 shadow-sm mb-3" style="border-radius: 12px;">
+    <div class="card-body p-4">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+            <div class="flex-grow-1">
+                <h5 class="fw-bold mb-1">{{ paper.paper_title }}</h5>
+                <p class="text-muted small mb-1">
+                    <i class="fas fa-user me-1"></i>{{ paper.membership.user.get_full_name }}
+                    {% if paper.co_author1 %}, {{ paper.co_author1.get_full_name }}{% endif %}
+                    {% if paper.co_author2 %}, {{ paper.co_author2.get_full_name }}{% endif %}
+                    {% if paper.co_author3 %}, {{ paper.co_author3.get_full_name }}{% endif %}
+                </p>
+                {% if paper.track %}<span class="badge bg-light text-dark"><i class="fas fa-tag me-1"></i>{{ paper.track.name }}</span>{% endif %}
+            </div>
+            {% if paper.file %}
+            <a href="{{ paper.file.url }}" class="btn btn-sm btn-outline-primary" target="_blank">
+                <i class="fas fa-file-pdf me-1"></i>Download PDF
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% else %}
+<div class="text-center py-5">
+    <i class="fas fa-search fa-3x text-muted mb-3"></i>
+    <p class="text-muted">No papers found matching your search.</p>
+</div>
+{% endif %}
+{% endblock %}

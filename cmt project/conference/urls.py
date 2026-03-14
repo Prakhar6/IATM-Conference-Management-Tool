@@ -4,7 +4,9 @@ from membership.views import register_for_conference, admin_conference_dashboard
 
 urlpatterns = [
     path('', views.conference_list_view, name='conference_list'),
-    path('<slug:slug>/', views.conference_detail_view, name = 'conference_detail'),
+    path('dashboard/', views.user_dashboard, name='user_dashboard'),
+    path('invoice/<int:payment_id>/', views.download_invoice, name='download_invoice'),
+    path('<slug:slug>/', views.conference_detail_view, name='conference_detail'),
     path('register/<slug:slug>/', register_for_conference, name='register_for_conference'),
     path('<slug:slug>/admin-dashboard/', admin_conference_dashboard_view, name='admin_conference_dashboard'),
     path('payment/<slug:slug>/', views.payment_checkout, name='payment_checkout'),

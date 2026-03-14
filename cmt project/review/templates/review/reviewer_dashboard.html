@@ -77,7 +77,7 @@
                                                     <i class="fas fa-user"></i>
                                                     <div class="detail-content">
                                                         <span class="detail-label">Author</span>
-                                                        <span class="detail-value">{{ review.submission.membership.user.get_full_name|default:review.submission.membership.user.email }}</span>
+                                                        <span class="detail-value">{% if review.is_blind %}Anonymous{% else %}{{ review.submission.membership.user.get_full_name|default:review.submission.membership.user.email }}{% endif %}</span>
                                                     </div>
                                                 </div>
                                                 <div class="detail-item">
@@ -164,7 +164,7 @@
                                                     <i class="fas fa-user"></i>
                                                     <div class="detail-content">
                                                         <span class="detail-label">Author</span>
-                                                        <span class="detail-value">{{ review.submission.membership.user.get_full_name|default:review.submission.membership.user.email }}</span>
+                                                        <span class="detail-value">{% if review.is_blind %}Anonymous{% else %}{{ review.submission.membership.user.get_full_name|default:review.submission.membership.user.email }}{% endif %}</span>
                                                     </div>
                                                 </div>
                                                 <div class="detail-item">

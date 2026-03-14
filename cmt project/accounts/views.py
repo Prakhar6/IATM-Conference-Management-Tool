@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from .forms import login_form, CustomUserCreationForm
+from .forms import login_form, CustomUserCreationForm, ProfileEditForm
 from django.contrib.auth import authenticate, login, logout
 from .models import CustomUser
 from django.contrib import messages
@@ -39,7 +39,14 @@ def profile_view(request):
 
 
 def profile_edit_view(request):
-    pass
+    if not request.user.is_authenticated:
+        return redirect('login')
+    form = ProfileEditForm(request.POST or None, instance=request.user)
+    if request.method == 'POST' and form.is_valid():
+        form.save()
+        messages.success(request, "Profile updated successfully.")
+        return redirect('profile')
+    return render(request, 'accounts/profile_edit.html', {'form': form})
 
 def logout_view(request):
     logout(request)

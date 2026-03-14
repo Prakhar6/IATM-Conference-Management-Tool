@@ -1,0 +1,91 @@
+{% extends 'dashboard.html' %}
+
+{% block title %}Send Email - {{ conference.conference_name }}{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h2 style="font-weight: 700; color: #1e293b;">
+        <i class="fas fa-envelope me-2" style="color: #667eea;"></i>Send Bulk Email
+    </h2>
+    <p class="text-muted">{{ conference.conference_name }}</p>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm" style="border-radius: 16px;">
+            <div class="card-body p-4">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Recipient Segment</label>
+                        <select name="segment" class="form-select">
+                            <option value="all">All Registrants ({{ segment_counts.all }})</option>
+                            <option value="paid">Paid Only ({{ segment_counts.paid }})</option>
+                            <option value="unpaid">Unpaid Only ({{ segment_counts.unpaid }})</option>
+                            <option value="authors">Authors ({{ segment_counts.authors }})</option>
+                            <option value="reviewers">Reviewers ({{ segment_counts.reviewers }})</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Subject</label>
+                        <input type="text" name="subject" class="form-control" placeholder="e.g., Call for Papers Reminder" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Message Body</label>
+                        <textarea name="body" class="form-control" rows="10" placeholder="Write your message here..." required></textarea>
+                        <small class="text-muted">Plain text format. HTML emails can be configured separately.</small>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-paper-plane me-2"></i>Send Email
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm" style="border-radius: 16px;">
+            <div class="card-body p-4">
+                <h5 class="fw-bold mb-3">Quick Templates</h5>
+                <div class="list-group list-group-flush">
+                    <button class="list-group-item list-group-item-action small" onclick="setTemplate('cfp')">
+                        <i class="fas fa-bullhorn me-2 text-primary"></i>Call for Papers
+                    </button>
+                    <button class="list-group-item list-group-item-action small" onclick="setTemplate('reminder')">
+                        <i class="fas fa-clock me-2 text-warning"></i>Event Reminder
+                    </button>
+                    <button class="list-group-item list-group-item-action small" onclick="setTemplate('thankyou')">
+                        <i class="fas fa-heart me-2 text-danger"></i>Thank You
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function setTemplate(type) {
+    const subjectEl = document.querySelector('input[name="subject"]');
+    const bodyEl = document.querySelector('textarea[name="body"]');
+
+    const templates = {
+        cfp: {
+            subject: 'Call for Papers - {{ conference.conference_name }}',
+            body: 'Dear Colleague,\n\nWe invite you to submit your research paper to {{ conference.conference_name }}.\n\nImportant Dates:\n- Submission Deadline: TBD\n- Notification: TBD\n- Conference: {{ conference.start_date }} - {{ conference.end_date }}\n\nWe look forward to your contribution!\n\nBest regards,\nIATM Conference Committee'
+        },
+        reminder: {
+            subject: 'Reminder: {{ conference.conference_name }} is Coming Up!',
+            body: 'Dear Attendee,\n\nThis is a friendly reminder that {{ conference.conference_name }} is approaching.\n\nPlease make sure you have:\n- Completed your registration\n- Prepared your presentation (if applicable)\n- Reviewed the conference schedule\n\nSee you there!\n\nBest regards,\nIATM Conference Committee'
+        },
+        thankyou: {
+            subject: 'Thank You for Attending {{ conference.conference_name }}',
+            body: 'Dear Attendee,\n\nThank you for participating in {{ conference.conference_name }}!\n\nWe hope you found the sessions valuable. Please check the proceedings for published papers.\n\nWe look forward to seeing you at future IATM events.\n\nBest regards,\nIATM Conference Committee'
+        }
+    };
+
+    if (templates[type]) {
+        subjectEl.value = templates[type].subject;
+        bodyEl.value = templates[type].body;
+    }
+}
+</script>
+{% endblock %}

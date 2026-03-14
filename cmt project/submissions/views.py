@@ -8,6 +8,8 @@ from conference.models import Conference
 from membership.models import Membership, Role
 from review.models import Review
 from .decorators import require_paid_membership
+from .emails import send_submission_confirmation
+from django.shortcuts import get_object_or_404
 import os
 
 
@@ -32,6 +34,10 @@ def create_submission(request, slug):
         messages.error(request, "You are not a member of this conference to submit a paper")
         return redirect('conference_detail', slug=slug)
 
+    if not conference.is_submission_open:
+        messages.error(request, "The submission deadline has passed for this conference.")
+        return redirect('conference_detail', slug=slug)
+
     if request.method == "POST":
         form = SubmissionForm(request.POST, request.FILES, conference=conference)
         if form.is_valid():
@@ -39,6 +45,7 @@ def create_submission(request, slug):
             membership = Membership.objects.get(user=request.user, conference=conference)
             submission.membership = membership
             submission.save()
+            send_submission_confirmation(submission, request)
             messages.success(request, "Submission Successfully Submitted")
             return redirect('submission_detail', pk=submission.pk)
         else:
@@ -252,3 +259,46 @@ def delete_submission(request, pk):
         'is_chair': is_chair,
         'is_reviewer': is_reviewer,
     })
+
+
+def proceedings_list(request):
+    """List all conferences with accepted papers (digital proceedings)."""
+    conferences = Conference.objects.filter(
+        memberships__submissions__status='ACCEPTED'
+    ).distinct()
+
+    context = {'conferences': conferences}
+    return render(request, 'submissions/proceedings_list.html', context)
+
+
+def proceedings_conference(request, slug):
+    """Searchable archive of accepted papers for a conference."""
+    conference = get_object_or_404(Conference, slug=slug)
+    papers = Submissions.objects.filter(
+        membership__conference=conference,
+        status='ACCEPTED'
+    ).select_related('membership__user', 'track')
+
+    # Search filter
+    query = request.GET.get('q', '')
+    if query:
+        papers = papers.filter(
+            Q(paper_title__icontains=query) |
+            Q(membership__user__first_name__icontains=query) |
+            Q(membership__user__last_name__icontains=query)
+        )
+
+    track_filter = request.GET.get('track')
+    if track_filter:
+        papers = papers.filter(track__id=track_filter)
+
+    tracks = conference.tracks.all()
+
+    context = {
+        'conference': conference,
+        'papers': papers,
+        'tracks': tracks,
+        'query': query,
+        'track_filter': track_filter,
+    }
+    return render(request, 'submissions/proceedings_conference.html', context)
