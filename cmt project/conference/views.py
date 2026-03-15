@@ -201,7 +201,7 @@ def payment_success(request, slug):
             if 'conference_slug' in request.session:
                 del request.session['conference_slug']
 
-            send_registration_confirmation(request.user, conference, membership)
+            send_registration_confirmation(request.user, conference, membership, request=request)
             messages.success(request, f"Payment successful! You now have access to {conference.conference_name}")
             return redirect('conference_detail', slug=slug)
         else:
@@ -246,10 +246,12 @@ def payment_cancel(request, slug):
 
 @login_required
 def user_dashboard(request):
-    """User dashboard showing registrations, payments, and submissions."""
+    """User dashboard showing registrations, payments, submissions, and personalized schedule."""
     from membership.models import Membership
     from submissions.models import Submissions
+    from schedule.models import Session
     from django.db.models import Q
+    from django.utils import timezone
 
     memberships = Membership.objects.filter(user=request.user).select_related('conference')
     payments = Payment.objects.filter(user=request.user, status='completed').select_related('conference', 'tier')
@@ -260,10 +262,32 @@ def user_dashboard(request):
         Q(co_author3=request.user)
     ).select_related('membership__conference', 'track').distinct()
 
+    # Personalized schedule: upcoming sessions for conferences the user is registered (paid) for
+    paid_conferences = memberships.filter(is_paid=True).values_list('conference_id', flat=True)
+    upcoming_sessions = Session.objects.filter(
+        conference_id__in=paid_conferences,
+        is_published=True,
+        end_time__gte=timezone.now(),
+    ).select_related('conference', 'track').prefetch_related('speakers').order_by('start_time')[:10]
+
+    # Conferences eligible for certificate (past conferences where user attended sessions)
+    from schedule.models import Attendance
+    past_paid_memberships = memberships.filter(
+        is_paid=True,
+        conference__end_date__lt=timezone.now().date(),
+    )
+    certificate_memberships = []
+    for m in past_paid_memberships:
+        attendance_count = Attendance.objects.filter(user=request.user, session__conference=m.conference).count()
+        if attendance_count > 0:
+            certificate_memberships.append({'membership': m, 'sessions_attended': attendance_count})
+
     context = {
         'memberships': memberships,
         'payments': payments,
         'submissions': submissions,
+        'upcoming_sessions': upcoming_sessions,
+        'certificate_memberships': certificate_memberships,
     }
     return render(request, 'conference/user_dashboard.html', context)
 
@@ -278,4 +302,35 @@ def download_invoice(request, payment_id):
 
     response = HttpResponse(buffer.getvalue(), content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="IATM_Invoice_{payment.id:06d}.pdf"'
+    return response
+
+
+@login_required
+def download_certificate(request, membership_id):
+    """Download attendance certificate PDF for a completed conference."""
+    from membership.models import Membership
+    from schedule.models import Attendance
+
+    membership = get_object_or_404(Membership, id=membership_id, user=request.user, is_paid=True)
+
+    # Conference must be over
+    from django.utils import timezone
+    if membership.conference.end_date >= timezone.now().date():
+        messages.error(request, "Certificates are available after the conference ends.")
+        return redirect('user_dashboard')
+
+    # User must have attended at least one session
+    attendance_count = Attendance.objects.filter(
+        user=request.user, session__conference=membership.conference
+    ).count()
+    if attendance_count == 0:
+        messages.error(request, "No session attendance recorded for this conference.")
+        return redirect('user_dashboard')
+
+    from .certificate import generate_certificate_pdf
+    buffer = generate_certificate_pdf(request.user, membership.conference, attendance_count)
+
+    response = HttpResponse(buffer.getvalue(), content_type='application/pdf')
+    filename = f"IATM_Certificate_{membership.conference.slug}.pdf"
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
     return response

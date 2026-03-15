@@ -38,8 +38,13 @@
                     {% if m.user.organization %}<p class="text-muted small mb-0">{{ m.user.organization }}</p>{% endif %}
                     {% if m.user.country %}<span class="text-muted small"><i class="fas fa-map-marker-alt me-1"></i>{{ m.user.country }}</span>{% endif %}
                 </div>
-                <div>
-                    <span class="badge bg-primary">{{ m.role1 }}</span>
+                <div class="text-end">
+                    <span class="badge bg-primary mb-1">{{ m.role1 }}</span>
+                    {% if m.user != request.user and m.messaging_opt_in %}
+                    <br><a href="{% url 'send_message' conference.slug m.user.id %}" class="btn btn-sm btn-outline-primary mt-1" title="Send message">
+                        <i class="fas fa-envelope"></i>
+                    </a>
+                    {% endif %}
                 </div>
             </div>
         </div>

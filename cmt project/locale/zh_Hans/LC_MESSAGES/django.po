@@ -1,0 +1,70 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: zh_Hans\n"
+
+msgid "IATM Conference Portal"
+msgstr "IATM会议门户"
+
+msgid "Academic Excellence Platform"
+msgstr "学术卓越平台"
+
+msgid "Main Menu"
+msgstr "主菜单"
+
+msgid "Dashboard"
+msgstr "仪表板"
+
+msgid "My Profile"
+msgstr "我的资料"
+
+msgid "Conferences"
+msgstr "会议"
+
+msgid "Proceedings"
+msgstr "论文集"
+
+msgid "My Submissions"
+msgstr "我的投稿"
+
+msgid "Messages"
+msgstr "消息"
+
+msgid "Review System"
+msgstr "审稿系统"
+
+msgid "View My Reviews"
+msgstr "查看我的评审"
+
+msgid "Reviewer Dashboard"
+msgstr "审稿人面板"
+
+msgid "Assign Reviewers"
+msgstr "分配审稿人"
+
+msgid "Language"
+msgstr "语言"
+
+msgid "Account"
+msgstr "账户"
+
+msgid "Logout"
+msgstr "退出登录"
+
+msgid "Login"
+msgstr "登录"
+
+msgid "Forgot password?"
+msgstr "忘记密码？"
+
+msgid "Don't have an account? Register"
+msgstr "没有账户？注册"
+
+msgid "Privacy Policy"
+msgstr "隐私政策"
+
+msgid "Export My Data"
+msgstr "导出我的数据"
+
+msgid "Delete My Account"
+msgstr "删除我的账户"

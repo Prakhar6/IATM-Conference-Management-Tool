@@ -1,0 +1,70 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: es\n"
+
+msgid "IATM Conference Portal"
+msgstr "Portal de Conferencias IATM"
+
+msgid "Academic Excellence Platform"
+msgstr "Plataforma de Excelencia Académica"
+
+msgid "Main Menu"
+msgstr "Menú Principal"
+
+msgid "Dashboard"
+msgstr "Panel de Control"
+
+msgid "My Profile"
+msgstr "Mi Perfil"
+
+msgid "Conferences"
+msgstr "Conferencias"
+
+msgid "Proceedings"
+msgstr "Actas"
+
+msgid "My Submissions"
+msgstr "Mis Envíos"
+
+msgid "Messages"
+msgstr "Mensajes"
+
+msgid "Review System"
+msgstr "Sistema de Revisión"
+
+msgid "View My Reviews"
+msgstr "Ver Mis Revisiones"
+
+msgid "Reviewer Dashboard"
+msgstr "Panel del Revisor"
+
+msgid "Assign Reviewers"
+msgstr "Asignar Revisores"
+
+msgid "Language"
+msgstr "Idioma"
+
+msgid "Account"
+msgstr "Cuenta"
+
+msgid "Logout"
+msgstr "Cerrar Sesión"
+
+msgid "Login"
+msgstr "Iniciar Sesión"
+
+msgid "Forgot password?"
+msgstr "¿Olvidaste tu contraseña?"
+
+msgid "Don't have an account? Register"
+msgstr "¿No tienes una cuenta? Regístrate"
+
+msgid "Privacy Policy"
+msgstr "Política de Privacidad"
+
+msgid "Export My Data"
+msgstr "Exportar Mis Datos"
+
+msgid "Delete My Account"
+msgstr "Eliminar Mi Cuenta"

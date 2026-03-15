@@ -1,0 +1,88 @@
+{% extends 'dashboard.html' %}
+
+{% block title %}Messages - IATM Conference{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h2 style="font-weight: 700; color: #1e293b;">
+        <i class="fas fa-envelope me-2" style="color: #667eea;"></i>Messages
+        {% if unread_count %}<span class="badge bg-danger">{{ unread_count }}</span>{% endif %}
+    </h2>
+    <p class="text-muted">Your conference networking messages</p>
+</div>
+
+<!-- Tabs -->
+<ul class="nav nav-pills mb-4">
+    <li class="nav-item">
+        <a class="nav-link {% if tab == 'inbox' %}active{% endif %}" href="?tab=inbox">
+            <i class="fas fa-inbox me-1"></i>Inbox
+            {% if unread_count %}<span class="badge bg-light text-dark ms-1">{{ unread_count }}</span>{% endif %}
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {% if tab == 'sent' %}active{% endif %}" href="?tab=sent">
+            <i class="fas fa-paper-plane me-1"></i>Sent
+        </a>
+    </li>
+</ul>
+
+{% if tab == 'inbox' %}
+<!-- Inbox -->
+{% if received_messages %}
+<div class="list-group">
+    {% for msg in received_messages %}
+    <a href="{% url 'message_detail' msg.id %}" class="list-group-item list-group-item-action {% if not msg.is_read %}bg-light border-start border-primary border-3{% endif %}" style="border-radius: 12px; margin-bottom: 8px;">
+        <div class="d-flex justify-content-between align-items-start">
+            <div class="d-flex gap-3 align-items-center">
+                <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 40px; height: 40px; background: linear-gradient(135deg, #667eea, #764ba2);">
+                    <span class="text-white fw-bold small">{{ msg.sender.first_name.0 }}{{ msg.sender.last_name.0 }}</span>
+                </div>
+                <div>
+                    <h6 class="mb-0 {% if not msg.is_read %}fw-bold{% endif %}">{{ msg.subject }}</h6>
+                    <small class="text-muted">From: {{ msg.sender.get_full_name }} | {{ msg.conference.conference_name }}</small>
+                </div>
+            </div>
+            <div class="text-end">
+                <small class="text-muted">{{ msg.created_at|timesince }} ago</small>
+                {% if not msg.is_read %}<br><span class="badge bg-primary">New</span>{% endif %}
+            </div>
+        </div>
+    </a>
+    {% endfor %}
+</div>
+{% else %}
+<div class="text-center py-5">
+    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+    <p class="text-muted">No messages yet. Connect with attendees from the Networking Hub.</p>
+</div>
+{% endif %}
+
+{% else %}
+<!-- Sent -->
+{% if sent_messages %}
+<div class="list-group">
+    {% for msg in sent_messages %}
+    <a href="{% url 'message_detail' msg.id %}" class="list-group-item list-group-item-action" style="border-radius: 12px; margin-bottom: 8px;">
+        <div class="d-flex justify-content-between align-items-start">
+            <div class="d-flex gap-3 align-items-center">
+                <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 40px; height: 40px; background: linear-gradient(135deg, #10b981, #059669);">
+                    <span class="text-white fw-bold small">{{ msg.recipient.first_name.0 }}{{ msg.recipient.last_name.0 }}</span>
+                </div>
+                <div>
+                    <h6 class="mb-0">{{ msg.subject }}</h6>
+                    <small class="text-muted">To: {{ msg.recipient.get_full_name }} | {{ msg.conference.conference_name }}</small>
+                </div>
+            </div>
+            <small class="text-muted">{{ msg.created_at|timesince }} ago</small>
+        </div>
+    </a>
+    {% endfor %}
+</div>
+{% else %}
+<div class="text-center py-5">
+    <i class="fas fa-paper-plane fa-3x text-muted mb-3"></i>
+    <p class="text-muted">No sent messages.</p>
+</div>
+{% endif %}
+{% endif %}
+{% endblock %}

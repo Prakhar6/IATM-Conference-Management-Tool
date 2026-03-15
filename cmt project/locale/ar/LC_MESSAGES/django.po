@@ -1,0 +1,70 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: ar\n"
+
+msgid "IATM Conference Portal"
+msgstr "بوابة مؤتمر IATM"
+
+msgid "Academic Excellence Platform"
+msgstr "منصة التميز الأكاديمي"
+
+msgid "Main Menu"
+msgstr "القائمة الرئيسية"
+
+msgid "Dashboard"
+msgstr "لوحة التحكم"
+
+msgid "My Profile"
+msgstr "ملفي الشخصي"
+
+msgid "Conferences"
+msgstr "المؤتمرات"
+
+msgid "Proceedings"
+msgstr "وقائع المؤتمر"
+
+msgid "My Submissions"
+msgstr "مقالاتي"
+
+msgid "Messages"
+msgstr "الرسائل"
+
+msgid "Review System"
+msgstr "نظام المراجعة"
+
+msgid "View My Reviews"
+msgstr "عرض مراجعاتي"
+
+msgid "Reviewer Dashboard"
+msgstr "لوحة المراجع"
+
+msgid "Assign Reviewers"
+msgstr "تعيين المراجعين"
+
+msgid "Language"
+msgstr "اللغة"
+
+msgid "Account"
+msgstr "الحساب"
+
+msgid "Logout"
+msgstr "تسجيل الخروج"
+
+msgid "Login"
+msgstr "تسجيل الدخول"
+
+msgid "Forgot password?"
+msgstr "نسيت كلمة المرور؟"
+
+msgid "Don't have an account? Register"
+msgstr "ليس لديك حساب؟ سجل الآن"
+
+msgid "Privacy Policy"
+msgstr "سياسة الخصوصية"
+
+msgid "Export My Data"
+msgstr "تصدير بياناتي"
+
+msgid "Delete My Account"
+msgstr "حذف حسابي"

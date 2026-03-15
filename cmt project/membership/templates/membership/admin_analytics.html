@@ -56,63 +56,153 @@
     </div>
 </div>
 
-<div class="row g-4">
-    <!-- Role Breakdown -->
-    <div class="col-12 col-md-4">
+<!-- Charts Row -->
+<div class="row g-4 mb-4">
+    <!-- Registration Status Pie Chart -->
+    <div class="col-12 col-md-6">
         <div class="card border-0 shadow-sm" style="border-radius: 16px;">
             <div class="card-header bg-white border-0 pt-4 px-4">
-                <h5 class="fw-bold"><i class="fas fa-users me-2" style="color: #667eea;"></i>Roles</h5>
+                <h5 class="fw-bold"><i class="fas fa-chart-pie me-2" style="color: #667eea;"></i>Registration Status</h5>
             </div>
-            <div class="card-body px-4">
-                <div class="d-flex justify-content-between mb-2">
-                    <span>Authors</span><span class="badge bg-primary">{{ authors }}</span>
-                </div>
-                <div class="d-flex justify-content-between mb-2">
-                    <span>Reviewers</span><span class="badge bg-info">{{ reviewers }}</span>
-                </div>
-                <div class="d-flex justify-content-between mb-2">
-                    <span>Chairs</span><span class="badge bg-warning text-dark">{{ chairs }}</span>
+            <div class="card-body px-4 d-flex justify-content-center">
+                <div style="max-width: 300px; width: 100%;">
+                    <canvas id="registrationChart"></canvas>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Geography -->
-    <div class="col-12 col-md-4">
+    <!-- Role Distribution Bar Chart -->
+    <div class="col-12 col-md-6">
+        <div class="card border-0 shadow-sm" style="border-radius: 16px;">
+            <div class="card-header bg-white border-0 pt-4 px-4">
+                <h5 class="fw-bold"><i class="fas fa-chart-bar me-2" style="color: #667eea;"></i>Role Distribution</h5>
+            </div>
+            <div class="card-body px-4 d-flex justify-content-center">
+                <div style="max-width: 400px; width: 100%;">
+                    <canvas id="roleChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Geographic Distribution -->
+    <div class="col-12 col-md-6">
         <div class="card border-0 shadow-sm" style="border-radius: 16px;">
             <div class="card-header bg-white border-0 pt-4 px-4">
                 <h5 class="fw-bold"><i class="fas fa-globe me-2" style="color: #667eea;"></i>Top Countries</h5>
             </div>
             <div class="card-body px-4">
-                {% for c in country_stats %}
-                <div class="d-flex justify-content-between mb-2">
-                    <span>{{ c.user__country|default:"Not specified" }}</span>
-                    <span class="badge bg-secondary">{{ c.count }}</span>
-                </div>
-                {% empty %}
-                <p class="text-muted small">No data yet</p>
-                {% endfor %}
+                <canvas id="countryChart" style="max-height: 300px;"></canvas>
             </div>
         </div>
     </div>
 
     <!-- Occupation Breakdown -->
-    <div class="col-12 col-md-4">
+    <div class="col-12 col-md-6">
         <div class="card border-0 shadow-sm" style="border-radius: 16px;">
             <div class="card-header bg-white border-0 pt-4 px-4">
                 <h5 class="fw-bold"><i class="fas fa-briefcase me-2" style="color: #667eea;"></i>Occupations</h5>
             </div>
             <div class="card-body px-4">
-                {% for o in occupation_stats %}
-                <div class="d-flex justify-content-between mb-2">
-                    <span>{{ o.user__occupation|default:"Other" }}</span>
-                    <span class="badge bg-secondary">{{ o.count }}</span>
-                </div>
-                {% empty %}
-                <p class="text-muted small">No data yet</p>
-                {% endfor %}
+                <canvas id="occupationChart" style="max-height: 300px;"></canvas>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const brandColors = ['#667eea', '#764ba2', '#28a745', '#f59e0b', '#ef4444', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899', '#14b8a6'];
+
+    // Registration Status Pie
+    new Chart(document.getElementById('registrationChart'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Paid', 'Unpaid'],
+            datasets: [{
+                data: [{{ paid_registrations }}, {{ unpaid_registrations }}],
+                backgroundColor: ['#28a745', '#f59e0b'],
+                borderWidth: 0,
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'bottom' },
+            },
+            cutout: '60%',
+        }
+    });
+
+    // Role Distribution Bar
+    new Chart(document.getElementById('roleChart'), {
+        type: 'bar',
+        data: {
+            labels: ['Authors', 'Reviewers', 'Chairs'],
+            datasets: [{
+                label: 'Count',
+                data: [{{ authors }}, {{ reviewers }}, {{ chairs }}],
+                backgroundColor: ['#667eea', '#3b82f6', '#f59e0b'],
+                borderRadius: 8,
+                barThickness: 40,
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true, ticks: { stepSize: 1 } },
+            },
+        }
+    });
+
+    // Country Horizontal Bar
+    new Chart(document.getElementById('countryChart'), {
+        type: 'bar',
+        data: {
+            labels: [{% for c in country_stats %}'{{ c.user__country|default:"N/A" }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+            datasets: [{
+                label: 'Attendees',
+                data: [{% for c in country_stats %}{{ c.count }}{% if not forloop.last %},{% endif %}{% endfor %}],
+                backgroundColor: brandColors.slice(0, {{ country_stats|length }}),
+                borderRadius: 6,
+            }]
+        },
+        options: {
+            responsive: true,
+            indexAxis: 'y',
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { beginAtZero: true, ticks: { stepSize: 1 } },
+            },
+        }
+    });
+
+    // Occupation Doughnut
+    new Chart(document.getElementById('occupationChart'), {
+        type: 'doughnut',
+        data: {
+            labels: [{% for o in occupation_stats %}'{{ o.user__occupation|default:"Other" }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+            datasets: [{
+                data: [{% for o in occupation_stats %}{{ o.count }}{% if not forloop.last %},{% endif %}{% endfor %}],
+                backgroundColor: brandColors.slice(0, {{ occupation_stats|length }}),
+                borderWidth: 0,
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'bottom', labels: { boxWidth: 12, padding: 15 } },
+            },
+            cutout: '55%',
+        }
+    });
+});
+</script>
 {% endblock %}

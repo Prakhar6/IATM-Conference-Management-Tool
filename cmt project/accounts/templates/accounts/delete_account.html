@@ -1,0 +1,49 @@
+{% extends "dashboard.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Delete My Account" %} - IATM Conference{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h2 style="font-weight: 700; color: #ef4444;">
+        <i class="fas fa-exclamation-triangle me-2"></i>{% trans "Delete My Account" %}
+    </h2>
+    <p class="text-muted">This action is permanent and cannot be undone.</p>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm" style="border-radius: 16px; border-top: 4px solid #ef4444 !important;">
+            <div class="card-body p-4">
+                <div class="alert alert-danger">
+                    <i class="fas fa-warning me-2"></i>
+                    <strong>Warning:</strong> Deleting your account will permanently remove:
+                    <ul class="mb-0 mt-2">
+                        <li>Your profile and personal information</li>
+                        <li>All conference registrations and memberships</li>
+                        <li>Your paper submissions</li>
+                        <li>Your reviews and review assignments</li>
+                        <li>Payment records</li>
+                        <li>All messages</li>
+                    </ul>
+                </div>
+
+                <p class="mb-3">To confirm deletion, type your email address: <strong>{{ request.user.email }}</strong></p>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <input type="email" name="confirm_email" class="form-control" placeholder="Type your email to confirm" required>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash me-1"></i>Permanently Delete Account
+                        </button>
+                        <a href="{% url 'profile' %}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

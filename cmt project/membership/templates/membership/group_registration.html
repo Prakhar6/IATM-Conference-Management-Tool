@@ -7,19 +7,23 @@
     <h2 style="font-weight: 700; color: #1e293b;">
         <i class="fas fa-users me-2" style="color: #667eea;"></i>Group Registration
     </h2>
-    <p class="text-muted">{{ conference.conference_name }} - Register multiple attendees at once</p>
+    <p class="text-muted">{{ conference.conference_name }} - Register and pay for multiple attendees at once</p>
 </div>
 
-<div class="row">
+<div class="row g-4">
+    <!-- Step 1: Add Attendees -->
     <div class="col-lg-6">
         <div class="card border-0 shadow-sm" style="border-radius: 16px;">
+            <div class="card-header bg-white border-0 pt-4 px-4">
+                <h5 class="fw-bold"><i class="fas fa-user-plus me-2" style="color: #667eea;"></i>Step 1: Add Attendees</h5>
+            </div>
             <div class="card-body p-4">
-                <h5 class="fw-bold mb-3">Add Attendees</h5>
                 <p class="text-muted small">Enter one email address per line. Users must have an IATM account.</p>
                 <form method="post">
                     {% csrf_token %}
+                    <input type="hidden" name="action" value="register">
                     <div class="mb-3">
-                        <textarea name="emails" class="form-control" rows="8" placeholder="user1@example.com&#10;user2@example.com&#10;user3@example.com" required></textarea>
+                        <textarea name="emails" class="form-control" rows="6" placeholder="user1@example.com&#10;user2@example.com&#10;user3@example.com" required></textarea>
                     </div>
                     <button type="submit" class="btn btn-primary w-100">
                         <i class="fas fa-user-plus me-2"></i>Register Attendees
@@ -28,30 +32,154 @@
             </div>
         </div>
     </div>
+
+    <!-- Step 2: Pay for Group -->
     <div class="col-lg-6">
         <div class="card border-0 shadow-sm" style="border-radius: 16px;">
+            <div class="card-header bg-white border-0 pt-4 px-4">
+                <h5 class="fw-bold"><i class="fas fa-credit-card me-2" style="color: #28a745;"></i>Step 2: Pay for Group</h5>
+            </div>
             <div class="card-body p-4">
-                <h5 class="fw-bold mb-3">Recently Registered</h5>
-                {% if recent_memberships %}
-                <div class="table-responsive">
-                    <table class="table table-sm">
-                        <thead><tr><th>Name</th><th>Email</th><th>Paid</th></tr></thead>
-                        <tbody>
-                            {% for m in recent_memberships %}
-                            <tr>
-                                <td>{{ m.user.get_full_name }}</td>
-                                <td>{{ m.user.email }}</td>
-                                <td>{% if m.is_paid %}<span class="badge bg-success">Yes</span>{% else %}<span class="badge bg-warning text-dark">No</span>{% endif %}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+                {% if unpaid_memberships %}
+                <form method="post" id="group-pay-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="pay">
+
+                    <!-- Tier Selection -->
+                    {% if tier_pricing %}
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Registration Tier</label>
+                        {% for tp in tier_pricing %}
+                        <div class="form-check mb-2">
+                            <input class="form-check-input tier-radio" type="radio" name="tier_id" value="{{ tp.tier.id }}" id="group_tier_{{ tp.tier.id }}" data-price="{{ tp.price }}" {% if forloop.first %}checked{% endif %}>
+                            <label class="form-check-label" for="group_tier_{{ tp.tier.id }}">
+                                <strong>{{ tp.tier.name }}</strong> - ${{ tp.price }} USD per person
+                                {% if tp.tier.description %}<br><small class="text-muted">{{ tp.tier.description }}</small>{% endif %}
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <!-- Select attendees to pay for -->
+                    <label class="form-label fw-semibold">Select Attendees to Pay For</label>
+                    <div class="mb-2">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="select-all" checked>
+                            <label class="form-check-label fw-semibold" for="select-all">Select All</label>
+                        </div>
+                    </div>
+                    <div class="list-group mb-3" style="max-height: 200px; overflow-y: auto;">
+                        {% for m in unpaid_memberships %}
+                        <label class="list-group-item list-group-item-action d-flex align-items-center gap-2" for="member_{{ m.id }}">
+                            <input class="form-check-input member-checkbox" type="checkbox" name="member_ids" value="{{ m.id }}" id="member_{{ m.id }}" checked>
+                            <div>
+                                <strong>{{ m.user.get_full_name }}</strong><br>
+                                <small class="text-muted">{{ m.user.email }}</small>
+                            </div>
+                        </label>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Total -->
+                    <div class="alert alert-info d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <strong>Total:</strong>
+                            <span id="selected-count">{{ unpaid_memberships|length }}</span> attendee(s)
+                        </div>
+                        <div class="fs-5 fw-bold text-success" id="total-amount">
+                            {% if tier_pricing %}
+                                ${{ tier_pricing.0.price }}
+                            {% else %}
+                                $0.00
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-success w-100">
+                        <i class="fab fa-paypal me-2"></i>Pay for Group with PayPal
+                    </button>
+                </form>
                 {% else %}
-                <p class="text-muted">No registrations yet.</p>
+                <div class="text-center py-4">
+                    <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                    <p class="text-muted">All registered attendees are paid, or no attendees have been added yet.</p>
+                </div>
                 {% endif %}
             </div>
         </div>
     </div>
 </div>
+
+<!-- Recent Registrations -->
+<div class="card border-0 shadow-sm mt-4" style="border-radius: 16px;">
+    <div class="card-header bg-white border-0 pt-4 px-4">
+        <h5 class="fw-bold"><i class="fas fa-list me-2" style="color: #667eea;"></i>All Registrations</h5>
+    </div>
+    <div class="card-body px-4">
+        {% if recent_memberships %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr><th>Name</th><th>Email</th><th>Organization</th><th>Status</th></tr>
+                </thead>
+                <tbody>
+                    {% for m in recent_memberships %}
+                    <tr>
+                        <td class="fw-semibold">{{ m.user.get_full_name }}</td>
+                        <td>{{ m.user.email }}</td>
+                        <td>{{ m.user.organization|default:"-" }}</td>
+                        <td>
+                            {% if m.is_paid %}
+                            <span class="badge bg-success"><i class="fas fa-check me-1"></i>Paid</span>
+                            {% else %}
+                            <span class="badge bg-warning text-dark"><i class="fas fa-clock me-1"></i>Unpaid</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-4">
+            <p class="text-muted">No registrations yet. Add attendees using the form above.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const selectAll = document.getElementById('select-all');
+    const checkboxes = document.querySelectorAll('.member-checkbox');
+    const tierRadios = document.querySelectorAll('.tier-radio');
+    const countEl = document.getElementById('selected-count');
+    const totalEl = document.getElementById('total-amount');
+
+    function getUnitPrice() {
+        const checked = document.querySelector('.tier-radio:checked');
+        return checked ? parseFloat(checked.dataset.price) : 0;
+    }
+
+    function updateTotal() {
+        const selected = document.querySelectorAll('.member-checkbox:checked').length;
+        const unit = getUnitPrice();
+        if (countEl) countEl.textContent = selected;
+        if (totalEl) totalEl.textContent = '$' + (unit * selected).toFixed(2);
+    }
+
+    if (selectAll) {
+        selectAll.addEventListener('change', function() {
+            checkboxes.forEach(cb => cb.checked = this.checked);
+            updateTotal();
+        });
+    }
+
+    checkboxes.forEach(cb => cb.addEventListener('change', updateTotal));
+    tierRadios.forEach(r => r.addEventListener('change', updateTotal));
+
+    updateTotal();
+});
+</script>
 {% endblock %}

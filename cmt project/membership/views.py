@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import HttpResponse
 from django.db.models import Sum, Count, Q
-from django.core.mail import send_mass_mail
+from django.core.mail import send_mail
 from django.conf import settings
 from conference.models import Conference, Payment
 from .models import Membership, Role
@@ -48,50 +48,220 @@ def group_registration(request, slug):
     from conference.models import RegistrationTier
 
     tiers = RegistrationTier.objects.filter(conference=conference, is_active=True)
+    is_member = request.user.iatm_membership
 
     if request.method == 'POST':
-        emails_raw = request.POST.get('emails', '')
-        emails = [e.strip() for e in emails_raw.split('\n') if e.strip()]
+        action = request.POST.get('action', 'register')
 
-        if not emails:
-            messages.error(request, "Please enter at least one email address.")
+        if action == 'register':
+            # Step 1: Register attendees (create unpaid memberships)
+            emails_raw = request.POST.get('emails', '')
+            emails = [e.strip() for e in emails_raw.split('\n') if e.strip()]
+
+            if not emails:
+                messages.error(request, "Please enter at least one email address.")
+                return redirect('group_registration', slug=slug)
+
+            from accounts.models import CustomUser
+            registered = []
+            errors = []
+
+            for email in emails:
+                try:
+                    user = CustomUser.objects.get(email=email)
+                    if Membership.objects.filter(user=user, conference=conference).exists():
+                        errors.append(f"{email} is already registered.")
+                    else:
+                        Membership.objects.create(
+                            user=user,
+                            conference=conference,
+                            role1='Author',
+                            is_paid=False,
+                        )
+                        registered.append(email)
+                except CustomUser.DoesNotExist:
+                    errors.append(f"{email} - no account found.")
+
+            if registered:
+                messages.success(request, f"Registered {len(registered)} attendee(s): {', '.join(registered)}")
+            if errors:
+                messages.warning(request, "Issues: " + "; ".join(errors))
+
             return redirect('group_registration', slug=slug)
 
-        from accounts.models import CustomUser
-        registered = []
-        errors = []
+        elif action == 'pay':
+            # Step 2: Pay for selected unpaid members
+            member_ids = request.POST.getlist('member_ids')
+            tier_id = request.POST.get('tier_id')
 
-        for email in emails:
+            if not member_ids:
+                messages.error(request, "Please select at least one attendee to pay for.")
+                return redirect('group_registration', slug=slug)
+
+            unpaid = Membership.objects.filter(
+                id__in=member_ids, conference=conference, is_paid=False
+            )
+            count = unpaid.count()
+            if count == 0:
+                messages.info(request, "All selected attendees are already paid.")
+                return redirect('group_registration', slug=slug)
+
+            # Calculate total amount
+            if tier_id and tiers.exists():
+                tier = get_object_or_404(RegistrationTier, id=tier_id, conference=conference)
+                unit_price = tier.get_current_price(is_member=is_member)
+                tier_name = tier.name
+            else:
+                tier = None
+                unit_price = 50.00 if request.user.occupation in ['student_undergraduate', 'student_graduate'] else 100.00
+                tier_name = "Registration"
+
+            total_amount = round(unit_price * count, 2)
+
+            # Create PayPal order for group
             try:
-                user = CustomUser.objects.get(email=email)
-                if Membership.objects.filter(user=user, conference=conference).exists():
-                    errors.append(f"{email} is already registered.")
-                else:
-                    Membership.objects.create(
-                        user=user,
-                        conference=conference,
-                        role1='Author',
-                        is_paid=False,
-                    )
-                    registered.append(email)
-            except CustomUser.DoesNotExist:
-                errors.append(f"{email} - no account found.")
+                from paypal_checkout_sdk.services import OrdersService
+                from paypal_checkout_sdk.models.orders import CreateOrderRequest
+                from paypal_config import get_paypal_client
+                from django.urls import reverse
 
-        if registered:
-            messages.success(request, f"Registered {len(registered)} attendee(s): {', '.join(registered)}")
-        if errors:
-            messages.warning(request, "Issues: " + "; ".join(errors))
+                order_data = {
+                    "intent": "CAPTURE",
+                    "purchase_units": [{
+                        "reference_id": f"group_{conference.id}_by_{request.user.id}",
+                        "description": f"{conference.conference_name} - Group {tier_name} x{count}",
+                        "amount": {
+                            "currency_code": "USD",
+                            "value": str(total_amount)
+                        }
+                    }],
+                    "application_context": {
+                        "return_url": request.build_absolute_uri(
+                            reverse('group_payment_success', kwargs={'slug': slug})
+                        ),
+                        "cancel_url": request.build_absolute_uri(
+                            reverse('group_registration', kwargs={'slug': slug})
+                        ),
+                        "brand_name": "IATM Conference",
+                        "landing_page": "BILLING",
+                        "user_action": "PAY_NOW",
+                        "shipping_preference": "NO_SHIPPING"
+                    }
+                }
 
-        return redirect('group_registration', slug=slug)
+                request_paypal = CreateOrderRequest(**order_data)
+                client = get_paypal_client()
+                orders_service = OrdersService(client)
+                response = orders_service.create_order(request_paypal)
 
+                # Create Payment record for the paying user
+                Payment.objects.create(
+                    user=request.user,
+                    conference=conference,
+                    tier=tier,
+                    amount=total_amount,
+                    paypal_order_id=response.id,
+                    status='pending'
+                )
+
+                # Store group info in session for post-payment processing
+                request.session['group_paypal_order_id'] = response.id
+                request.session['group_member_ids'] = list(unpaid.values_list('id', flat=True))
+                request.session['group_conference_slug'] = slug
+
+                if hasattr(response, 'links') and response.links:
+                    for link in response.links:
+                        if hasattr(link, 'rel') and link.rel == "approve":
+                            if hasattr(link, 'href'):
+                                return redirect(str(link.href))
+
+                return redirect(f"https://www.paypal.com/checkoutnow?token={response.id}")
+
+            except Exception as e:
+                messages.error(request, f"Payment error: {str(e)}")
+                return redirect('group_registration', slug=slug)
+
+    # GET: show form with unpaid members and tier selection
     memberships = Membership.objects.filter(conference=conference).select_related('user').order_by('-created_at')[:20]
+    unpaid_memberships = Membership.objects.filter(conference=conference, is_paid=False).select_related('user')
+
+    # Build tier pricing for display
+    tier_pricing = []
+    for tier in tiers:
+        current_price = tier.get_current_price(is_member=is_member)
+        tier_pricing.append({
+            'tier': tier,
+            'price': current_price,
+        })
 
     context = {
         'conference': conference,
         'tiers': tiers,
+        'tier_pricing': tier_pricing,
         'recent_memberships': memberships,
+        'unpaid_memberships': unpaid_memberships,
+        'is_member': is_member,
+        'is_early_bird': conference.is_early_bird,
     }
     return render(request, 'membership/group_registration.html', context)
+
+
+@login_required
+def group_payment_success(request, slug):
+    """Handle successful PayPal payment for group registration."""
+    conference = get_object_or_404(Conference, slug=slug)
+
+    paypal_order_id = request.session.get('group_paypal_order_id')
+    member_ids = request.session.get('group_member_ids', [])
+    conf_slug = request.session.get('group_conference_slug')
+
+    if not paypal_order_id or conf_slug != slug:
+        messages.error(request, "Invalid payment session.")
+        return redirect('group_registration', slug=slug)
+
+    try:
+        from paypal_checkout_sdk.services import OrdersService
+        from paypal_config import get_paypal_client
+
+        client = get_paypal_client()
+        orders_service = OrdersService(client)
+        response = orders_service.capture_order(paypal_order_id)
+
+        if response.status == "COMPLETED":
+            # Mark all group members as paid
+            paid_count = Membership.objects.filter(id__in=member_ids, conference=conference).update(is_paid=True)
+
+            # Update Payment record
+            try:
+                payment = Payment.objects.get(paypal_order_id=paypal_order_id)
+                payment.status = 'completed'
+                if hasattr(response, 'purchase_units') and response.purchase_units:
+                    pu = response.purchase_units[0]
+                    if hasattr(pu, 'payments') and hasattr(pu.payments, 'captures') and pu.payments.captures:
+                        payment.paypal_payment_id = pu.payments.captures[0].id
+                payment.save()
+            except Payment.DoesNotExist:
+                pass
+
+            # Clear session
+            for key in ['group_paypal_order_id', 'group_member_ids', 'group_conference_slug']:
+                request.session.pop(key, None)
+
+            messages.success(request, f"Group payment successful! {paid_count} attendee(s) are now registered.")
+            return redirect('group_registration', slug=slug)
+        else:
+            try:
+                payment = Payment.objects.get(paypal_order_id=paypal_order_id)
+                payment.status = 'failed'
+                payment.save()
+            except Payment.DoesNotExist:
+                pass
+            messages.error(request, "Payment was not completed successfully.")
+            return redirect('group_registration', slug=slug)
+
+    except Exception as e:
+        messages.error(request, f"Payment verification error: {str(e)}")
+        return redirect('group_registration', slug=slug)
 
 
 @login_required
@@ -298,6 +468,9 @@ def download_qr_ticket(request, membership_id):
 @staff_member_required
 def bulk_email_view(request, slug):
     """Send bulk HTML emails to segmented attendee lists."""
+    from django.core.mail import EmailMultiAlternatives
+    from django.template.loader import render_to_string
+
     conference = get_object_or_404(Conference, slug=slug)
     memberships = Membership.objects.filter(conference=conference).select_related('user')
 
@@ -321,22 +494,34 @@ def bulk_email_view(request, slug):
         elif segment == 'reviewers':
             recipients = recipients.filter(Q(role1='Reviewer') | Q(role2='Reviewer'))
 
-        email_list = []
-        for m in recipients:
-            email_list.append((
-                subject,
-                body,
-                settings.DEFAULT_FROM_EMAIL,
-                [m.user.email],
-            ))
+        # Render HTML email using branded template
+        html_message = render_to_string('submissions/emails/bulk_email.html', {
+            'subject': subject,
+            'body': body,
+            'conference': conference,
+        })
 
-        if email_list:
+        sent_count = 0
+        fail_count = 0
+        for m in recipients:
             try:
-                send_mass_mail(email_list, fail_silently=False)
-                messages.success(request, f"Email sent to {len(email_list)} recipient(s).")
-            except Exception as e:
-                messages.error(request, f"Failed to send emails: {str(e)}")
-        else:
+                email = EmailMultiAlternatives(
+                    subject=subject,
+                    body=body,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    to=[m.user.email],
+                )
+                email.attach_alternative(html_message, "text/html")
+                email.send()
+                sent_count += 1
+            except Exception:
+                fail_count += 1
+
+        if sent_count:
+            messages.success(request, f"HTML email sent to {sent_count} recipient(s).")
+        if fail_count:
+            messages.warning(request, f"Failed to send to {fail_count} recipient(s).")
+        if not sent_count and not fail_count:
             messages.warning(request, "No recipients matched the selected segment.")
 
         return redirect('bulk_email', slug=slug)
@@ -354,3 +539,112 @@ def bulk_email_view(request, slug):
         'segment_counts': segment_counts,
     }
     return render(request, 'membership/bulk_email.html', context)
+
+
+@login_required
+def message_inbox(request):
+    """Inbox showing received messages across all conferences."""
+    from .models import AttendeeMessage
+
+    received = AttendeeMessage.objects.filter(recipient=request.user).select_related(
+        'sender', 'conference'
+    )
+    sent = AttendeeMessage.objects.filter(sender=request.user).select_related(
+        'recipient', 'conference'
+    )
+
+    tab = request.GET.get('tab', 'inbox')
+    unread_count = received.filter(is_read=False).count()
+
+    context = {
+        'received_messages': received,
+        'sent_messages': sent,
+        'tab': tab,
+        'unread_count': unread_count,
+    }
+    return render(request, 'membership/message_inbox.html', context)
+
+
+@login_required
+def message_detail(request, message_id):
+    """View a single message and mark as read."""
+    from .models import AttendeeMessage
+
+    msg = get_object_or_404(AttendeeMessage, id=message_id)
+
+    # Only sender or recipient can view
+    if msg.sender != request.user and msg.recipient != request.user:
+        messages.error(request, "You are not authorized to view this message.")
+        return redirect('message_inbox')
+
+    # Mark as read if recipient is viewing
+    if msg.recipient == request.user and not msg.is_read:
+        msg.is_read = True
+        msg.save()
+
+    # Get conversation thread (messages between these two users for this conference)
+    thread = AttendeeMessage.objects.filter(
+        conference=msg.conference,
+    ).filter(
+        Q(sender=msg.sender, recipient=msg.recipient) |
+        Q(sender=msg.recipient, recipient=msg.sender)
+    ).select_related('sender', 'recipient').order_by('created_at')
+
+    context = {
+        'message': msg,
+        'thread': thread,
+    }
+    return render(request, 'membership/message_detail.html', context)
+
+
+@login_required
+def send_message(request, slug, recipient_id):
+    """Send a message to another attendee within a conference."""
+    from .models import AttendeeMessage
+    from accounts.models import CustomUser
+
+    conference = get_object_or_404(Conference, slug=slug)
+    recipient = get_object_or_404(CustomUser, id=recipient_id)
+
+    # Verify both sender and recipient are paid members of this conference
+    sender_member = Membership.objects.filter(
+        user=request.user, conference=conference, is_paid=True
+    ).first()
+    recipient_member = Membership.objects.filter(
+        user=recipient, conference=conference, is_paid=True, messaging_opt_in=True
+    ).first()
+
+    if not sender_member:
+        messages.error(request, "You must be a paid registrant to send messages.")
+        return redirect('networking_hub', slug=slug)
+
+    if not recipient_member:
+        messages.error(request, "This attendee is not available for messaging.")
+        return redirect('networking_hub', slug=slug)
+
+    if request.user == recipient:
+        messages.error(request, "You cannot send a message to yourself.")
+        return redirect('networking_hub', slug=slug)
+
+    if request.method == 'POST':
+        subject = request.POST.get('subject', '').strip()
+        body = request.POST.get('body', '').strip()
+
+        if not subject or not body:
+            messages.error(request, "Subject and message are required.")
+        else:
+            AttendeeMessage.objects.create(
+                conference=conference,
+                sender=request.user,
+                recipient=recipient,
+                subject=subject,
+                body=body,
+            )
+            messages.success(request, f"Message sent to {recipient.get_full_name()}.")
+            return redirect('networking_hub', slug=slug)
+
+    context = {
+        'conference': conference,
+        'recipient': recipient,
+    }
+    return render(request, 'membership/send_message.html', context)

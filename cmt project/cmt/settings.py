@@ -173,17 +173,37 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Email Configuration
+# Supported providers via env:
+#   SendGrid:  EMAIL_HOST=smtp.sendgrid.net, EMAIL_HOST_USER=apikey, EMAIL_HOST_PASSWORD=SG.xxx
+#   Mailgun:   EMAIL_HOST=smtp.mailgun.org,  EMAIL_HOST_USER=postmaster@mg.iatm.us, EMAIL_HOST_PASSWORD=xxx
+#   Gmail:     EMAIL_HOST=smtp.gmail.com,     EMAIL_HOST_USER=you@gmail.com, EMAIL_HOST_PASSWORD=app-password
+#   Console:   EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend (default for dev)
 EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend')
-EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.sendgrid.net')
 EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
 EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True').lower() == 'true'
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
 DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'IATM Conference <noreply@iatm.us>')
 
+# Zoom API (Server-to-Server OAuth)
+ZOOM_ACCOUNT_ID = os.getenv('ZOOM_ACCOUNT_ID', '')
+ZOOM_CLIENT_ID = os.getenv('ZOOM_CLIENT_ID', '')
+ZOOM_CLIENT_SECRET = os.getenv('ZOOM_CLIENT_SECRET', '')
+ZOOM_USER_ID = os.getenv('ZOOM_USER_ID', 'me')
 
+# Security settings
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'
 
-
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
 
 
 

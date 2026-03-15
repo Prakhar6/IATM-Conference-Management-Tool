@@ -37,7 +37,9 @@ class Submissions(models.Model):
     def update_status_from_reviews(self):
         """Update submission status based on all submitted reviews"""
         from review.models import Review
-        
+
+        old_status = self.status
+
         # Get all submitted reviews for this submission
         submitted_reviews = Review.objects.filter(
             submission=self,
@@ -50,7 +52,7 @@ class Submissions(models.Model):
             return
 
         total_reviews = submitted_reviews.count()
-        
+
         # Check if any review recommends rejection (rejection overrides everything)
         if submitted_reviews.filter(recommendation='REJECT').exists():
             self.status = self.StatusChoices.REJECTED
@@ -65,3 +67,15 @@ class Submissions(models.Model):
             self.status = self.StatusChoices.PENDING
 
         self.save()
+
+        # Send decision notification if status changed to a final decision
+        if self.status != old_status and self.status in (
+            self.StatusChoices.ACCEPTED,
+            self.StatusChoices.REJECTED,
+            self.StatusChoices.REVISION,
+        ):
+            try:
+                from submissions.emails import send_submission_decision
+                send_submission_decision(self)
+            except Exception:
+                pass  # Don't block status update if email fails

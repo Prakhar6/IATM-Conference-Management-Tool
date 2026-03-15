@@ -18,9 +18,34 @@ PAYPAL_CLIENT_ID=your_live_paypal_client_id
 PAYPAL_CLIENT_SECRET=your_live_paypal_client_secret
 PAYPAL_MODE=live
 
-# Optional: Email Configuration
-EMAIL_HOST=smtp.gmail.com
+# Email Configuration (choose one provider)
+# For production, set EMAIL_BACKEND to use real SMTP:
+EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+DEFAULT_FROM_EMAIL=IATM Conference <noreply@iatm.us>
+
+# Option A: SendGrid (recommended)
+EMAIL_HOST=smtp.sendgrid.net
 EMAIL_PORT=587
 EMAIL_USE_TLS=True
-EMAIL_HOST_USER=your-email@gmail.com
-EMAIL_HOST_PASSWORD=your-app-password
+EMAIL_HOST_USER=apikey
+EMAIL_HOST_PASSWORD=SG.your_sendgrid_api_key_here
+
+# Option B: Mailgun
+# EMAIL_HOST=smtp.mailgun.org
+# EMAIL_PORT=587
+# EMAIL_USE_TLS=True
+# EMAIL_HOST_USER=postmaster@mg.iatm.us
+# EMAIL_HOST_PASSWORD=your_mailgun_smtp_password
+
+# Option C: Gmail (not recommended for production)
+# EMAIL_HOST=smtp.gmail.com
+# EMAIL_PORT=587
+# EMAIL_USE_TLS=True
+# EMAIL_HOST_USER=your-email@gmail.com
+# EMAIL_HOST_PASSWORD=your-app-password
+
+# Zoom API (Server-to-Server OAuth)
+ZOOM_ACCOUNT_ID=your_zoom_account_id
+ZOOM_CLIENT_ID=your_zoom_client_id
+ZOOM_CLIENT_SECRET=your_zoom_client_secret
+ZOOM_USER_ID=me

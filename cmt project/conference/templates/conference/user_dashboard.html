@@ -53,6 +53,96 @@
     </div>
 </div>
 
+<!-- My Upcoming Schedule -->
+<div class="card border-0 shadow-sm mb-4" style="border-radius: 16px;">
+    <div class="card-header bg-white border-0 pt-4 px-4">
+        <h5 class="fw-bold"><i class="fas fa-clock me-2" style="color: #764ba2;"></i>My Upcoming Sessions</h5>
+    </div>
+    <div class="card-body px-4">
+        {% if upcoming_sessions %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Session</th>
+                        <th>Conference</th>
+                        <th>Track</th>
+                        <th>Date & Time</th>
+                        <th>Type</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in upcoming_sessions %}
+                    <tr>
+                        <td class="fw-semibold">{{ s.title|truncatewords:8 }}</td>
+                        <td>{{ s.conference.conference_name }}</td>
+                        <td>{{ s.track.name|default:"-" }}</td>
+                        <td>
+                            {{ s.start_time|date:"M j, Y" }}<br>
+                            <small class="text-muted">{{ s.start_time|time:"g:i A" }} - {{ s.end_time|time:"g:i A" }}</small>
+                        </td>
+                        <td><span class="badge bg-info">{{ s.get_session_type_display }}</span></td>
+                        <td>
+                            {% if s.zoom_meeting_url %}
+                            <a href="{% url 'join_session' s.id %}" class="btn btn-sm btn-primary">
+                                <i class="fas fa-video me-1"></i>Join
+                            </a>
+                            {% else %}
+                            <span class="text-muted small">{{ s.room|default:"TBD" }}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-4">
+            <i class="fas fa-calendar-day fa-3x text-muted mb-3"></i>
+            <p class="text-muted">No upcoming sessions. Register for a conference to see your schedule here.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Certificates -->
+{% if certificate_memberships %}
+<div class="card border-0 shadow-sm mb-4" style="border-radius: 16px;">
+    <div class="card-header bg-white border-0 pt-4 px-4">
+        <h5 class="fw-bold"><i class="fas fa-award me-2" style="color: #d4a843;"></i>My Certificates</h5>
+    </div>
+    <div class="card-body px-4">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Conference</th>
+                        <th>Dates</th>
+                        <th>Sessions Attended</th>
+                        <th>Certificate</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in certificate_memberships %}
+                    <tr>
+                        <td class="fw-semibold">{{ item.membership.conference.conference_name }}</td>
+                        <td>{{ item.membership.conference.start_date|date:"M j" }} - {{ item.membership.conference.end_date|date:"M j, Y" }}</td>
+                        <td><span class="badge bg-success">{{ item.sessions_attended }} session{{ item.sessions_attended|pluralize }}</span></td>
+                        <td>
+                            <a href="{% url 'download_certificate' item.membership.id %}" class="btn btn-sm btn-outline-warning">
+                                <i class="fas fa-download me-1"></i>Download PDF
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <!-- My Registrations -->
 <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px;">
     <div class="card-header bg-white border-0 pt-4 px-4">

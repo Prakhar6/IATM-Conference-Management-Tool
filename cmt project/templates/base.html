@@ -76,5 +76,25 @@
     {% block content %}
     <!-- page content here -->
     {% endblock %}
+
+    <!-- Cookie Consent Banner -->
+    <div id="cookie-consent" style="display:none; position:fixed; bottom:0; left:0; right:0; background:#1e293b; color:white; padding:1rem 1.5rem; z-index:9999; box-shadow:0 -4px 20px rgba(0,0,0,0.2);">
+        <div class="container d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div class="small">
+                This site uses essential cookies for authentication and security. No tracking cookies are used.
+                <a href="{% url 'privacy_policy' %}" class="text-info">Privacy Policy</a>
+            </div>
+            <button onclick="acceptCookies()" class="btn btn-sm btn-primary">Accept</button>
+        </div>
+    </div>
+    <script>
+    if (!localStorage.getItem('cookie_consent')) {
+        document.getElementById('cookie-consent').style.display = 'block';
+    }
+    function acceptCookies() {
+        localStorage.setItem('cookie_consent', 'accepted');
+        document.getElementById('cookie-consent').style.display = 'none';
+    }
+    </script>
 </body>
 </html>

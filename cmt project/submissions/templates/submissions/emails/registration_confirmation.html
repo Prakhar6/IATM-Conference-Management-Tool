@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registration Confirmed</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .email-container {
+            background-color: #ffffff;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            text-align: center;
+            border-bottom: 3px solid #28a745;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            color: #28a745;
+            margin: 0;
+            font-size: 28px;
+        }
+        .conference-info {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .conference-info h3 {
+            margin: 0 0 10px 0;
+            font-size: 20px;
+        }
+        .conference-info p {
+            margin: 0;
+            opacity: 0.9;
+        }
+        .registration-details {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 4px solid #28a745;
+        }
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+        .detail-label {
+            font-weight: 600;
+            color: #495057;
+        }
+        .detail-value {
+            color: #2c3e50;
+        }
+        .payment-section {
+            background-color: #d4edda;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .payment-amount {
+            font-size: 32px;
+            font-weight: 700;
+            color: #28a745;
+        }
+        .action-buttons {
+            text-align: center;
+            margin: 30px 0;
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            margin: 0 10px;
+            background-color: #28a745;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+        .btn-secondary {
+            background-color: #667eea;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e9ecef;
+            color: #6c757d;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <h1>Registration Confirmed</h1>
+            <p>Your conference registration is complete!</p>
+        </div>
+
+        <p>Dear {{ user.get_full_name }},</p>
+
+        <div class="conference-info">
+            <h3>{{ conference.conference_name }}</h3>
+            <p>{{ conference.start_date|date:"F j, Y" }} - {{ conference.end_date|date:"F j, Y" }}</p>
+            <p>{{ conference.location }}</p>
+        </div>
+
+        <div class="registration-details">
+            <h3 style="margin-top: 0; color: #28a745;">Registration Details</h3>
+
+            <div class="detail-row">
+                <span class="detail-label">Name:</span>
+                <span class="detail-value">{{ user.get_full_name }}</span>
+            </div>
+
+            <div class="detail-row">
+                <span class="detail-label">Email:</span>
+                <span class="detail-value">{{ user.email }}</span>
+            </div>
+
+            <div class="detail-row">
+                <span class="detail-label">Role:</span>
+                <span class="detail-value">
+                    {{ membership.role1 }}{% if membership.role2 != 'N/A' %}, {{ membership.role2 }}{% endif %}
+                </span>
+            </div>
+
+            {% if payment %}
+            <div class="detail-row">
+                <span class="detail-label">Invoice #:</span>
+                <span class="detail-value">INV-{{ payment.id|stringformat:"06d" }}</span>
+            </div>
+
+            <div class="detail-row">
+                <span class="detail-label">Tier:</span>
+                <span class="detail-value">{{ payment.tier.name|default:"Registration" }}</span>
+            </div>
+            {% endif %}
+
+            <div class="detail-row">
+                <span class="detail-label">Date:</span>
+                <span class="detail-value">{{ registration_date }}</span>
+            </div>
+        </div>
+
+        {% if payment %}
+        <div class="payment-section">
+            <p style="margin: 0 0 5px 0; color: #155724; font-weight: 600;">Amount Paid</p>
+            <div class="payment-amount">${{ payment.amount }} {{ payment.currency }}</div>
+            <p style="margin: 5px 0 0 0; color: #155724; font-size: 14px;">
+                <span style="background-color: #28a745; color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px;">
+                    Payment Confirmed
+                </span>
+            </p>
+        </div>
+        {% endif %}
+
+        <div class="action-buttons">
+            <a href="{{ dashboard_url }}" class="btn">View Dashboard</a>
+            <a href="{{ conference_url }}" class="btn btn-secondary">Conference Details</a>
+        </div>
+
+        {% if has_invoice %}
+        <p style="text-align: center; color: #6c757d; font-size: 14px;">
+            A PDF invoice is attached to this email for your records.
+        </p>
+        {% endif %}
+
+        <div class="footer">
+            <p><strong>What's next?</strong></p>
+            <ul style="text-align: left; max-width: 400px; margin: 0 auto;">
+                <li>Browse the conference schedule and sessions</li>
+                <li>Submit your papers before the deadline</li>
+                <li>Download your badge and QR ticket from the dashboard</li>
+            </ul>
+
+            <p style="margin-top: 20px; font-size: 12px; color: #999;">
+                This is an automated message from the {{ conference.conference_name }} Conference Management System.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

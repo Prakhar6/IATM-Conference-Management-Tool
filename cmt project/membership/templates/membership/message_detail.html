@@ -1,0 +1,78 @@
+{% extends 'dashboard.html' %}
+
+{% block title %}{{ message.subject }} - Messages{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <a href="{% url 'message_inbox' %}" class="btn btn-sm btn-outline-secondary mb-3">
+        <i class="fas fa-arrow-left me-1"></i>Back to Messages
+    </a>
+    <h2 style="font-weight: 700; color: #1e293b;">{{ message.subject }}</h2>
+    <p class="text-muted">{{ message.conference.conference_name }}</p>
+</div>
+
+<!-- Conversation Thread -->
+<div class="card border-0 shadow-sm" style="border-radius: 16px;">
+    <div class="card-body p-4">
+        {% for msg in thread %}
+        <div class="d-flex gap-3 mb-4 {% if msg.sender == request.user %}flex-row-reverse{% endif %}">
+            <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 40px; height: 40px; background: linear-gradient(135deg, {% if msg.sender == request.user %}#10b981, #059669{% else %}#667eea, #764ba2{% endif %});">
+                <span class="text-white fw-bold small">{{ msg.sender.first_name.0 }}{{ msg.sender.last_name.0 }}</span>
+            </div>
+            <div style="max-width: 70%;">
+                <div class="p-3 rounded-3 {% if msg.sender == request.user %}bg-primary bg-opacity-10{% else %}bg-light{% endif %}">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <strong class="small">{{ msg.sender.get_full_name }}</strong>
+                        <small class="text-muted ms-3">{{ msg.created_at|date:"M j, g:i A" }}</small>
+                    </div>
+                    <p class="mb-0" style="white-space: pre-wrap;">{{ msg.body }}</p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Reply Form -->
+{% if message.sender != request.user %}
+{% with other_user=message.sender %}
+<div class="card border-0 shadow-sm mt-4" style="border-radius: 16px;">
+    <div class="card-header bg-white border-0 pt-4 px-4">
+        <h5 class="fw-bold"><i class="fas fa-reply me-2" style="color: #667eea;"></i>Reply to {{ other_user.get_full_name }}</h5>
+    </div>
+    <div class="card-body p-4">
+        <form method="post" action="{% url 'send_message' message.conference.slug other_user.id %}">
+            {% csrf_token %}
+            <input type="hidden" name="subject" value="Re: {{ message.subject }}">
+            <div class="mb-3">
+                <textarea name="body" class="form-control" rows="3" placeholder="Type your reply..." required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-paper-plane me-1"></i>Send Reply
+            </button>
+        </form>
+    </div>
+</div>
+{% endwith %}
+{% else %}
+{% with other_user=message.recipient %}
+<div class="card border-0 shadow-sm mt-4" style="border-radius: 16px;">
+    <div class="card-header bg-white border-0 pt-4 px-4">
+        <h5 class="fw-bold"><i class="fas fa-reply me-2" style="color: #667eea;"></i>Reply to {{ other_user.get_full_name }}</h5>
+    </div>
+    <div class="card-body p-4">
+        <form method="post" action="{% url 'send_message' message.conference.slug other_user.id %}">
+            {% csrf_token %}
+            <input type="hidden" name="subject" value="Re: {{ message.subject }}">
+            <div class="mb-3">
+                <textarea name="body" class="form-control" rows="3" placeholder="Type your reply..." required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-paper-plane me-1"></i>Send Reply
+            </button>
+        </form>
+    </div>
+</div>
+{% endwith %}
+{% endif %}
+{% endblock %}

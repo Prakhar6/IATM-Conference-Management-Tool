@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block content %}
+<div class="container py-5" style="max-width: 800px;">
+    <h1 class="mb-4">{% trans "Privacy Policy" %}</h1>
+    <p class="text-muted mb-4">Last updated: March 2026</p>
+
+    <div class="card border-0 shadow-sm p-4" style="border-radius: 16px;">
+        <h4>1. Information We Collect</h4>
+        <p>When you register for the IATM Conference Portal, we collect:</p>
+        <ul>
+            <li><strong>Account Information:</strong> Name, email address, phone number, country, organization, and occupation.</li>
+            <li><strong>Conference Data:</strong> Registration details, paper submissions, review assignments, and attendance records.</li>
+            <li><strong>Payment Data:</strong> Transaction amounts and PayPal order IDs. We do not store credit card numbers.</li>
+            <li><strong>Usage Data:</strong> Session attendance logs for certificate eligibility.</li>
+        </ul>
+
+        <h4 class="mt-4">2. How We Use Your Data</h4>
+        <ul>
+            <li>To manage your conference registration and membership.</li>
+            <li>To process payments and issue invoices.</li>
+            <li>To facilitate the peer review process.</li>
+            <li>To send transactional emails (registration confirmations, review notifications).</li>
+            <li>To generate attendance certificates.</li>
+            <li>To enable networking features between conference attendees (opt-in only).</li>
+        </ul>
+
+        <h4 class="mt-4">3. Data Sharing</h4>
+        <p>We do not sell your personal data. Your information may be shared with:</p>
+        <ul>
+            <li><strong>Conference organizers</strong> for event management purposes.</li>
+            <li><strong>PayPal</strong> for payment processing.</li>
+            <li><strong>Other attendees</strong> only if you opt in to the networking hub and messaging features.</li>
+        </ul>
+
+        <h4 class="mt-4">4. Your Rights (GDPR & International)</h4>
+        <p>You have the right to:</p>
+        <ul>
+            <li><strong>Access</strong> your personal data — use the "Export My Data" feature in your profile.</li>
+            <li><strong>Rectify</strong> inaccurate data — update your profile at any time.</li>
+            <li><strong>Delete</strong> your account and all associated data — use the "Delete My Account" feature.</li>
+            <li><strong>Object</strong> to processing — contact us to opt out of non-essential communications.</li>
+            <li><strong>Data Portability</strong> — download your data in JSON format.</li>
+        </ul>
+
+        <h4 class="mt-4">5. Data Retention</h4>
+        <p>We retain your data for as long as your account is active. Conference records (submissions, reviews) are retained for academic record-keeping purposes. You may request full deletion at any time.</p>
+
+        <h4 class="mt-4">6. Cookies</h4>
+        <p>We use essential cookies for:</p>
+        <ul>
+            <li><strong>Session management</strong> — to keep you logged in.</li>
+            <li><strong>CSRF protection</strong> — to secure form submissions.</li>
+            <li><strong>Language preference</strong> — to remember your selected language.</li>
+        </ul>
+        <p>We do not use tracking or advertising cookies.</p>
+
+        <h4 class="mt-4">7. Security</h4>
+        <p>All data is transmitted over HTTPS with TLS encryption. We use HSTS, secure cookies, and CSRF protection. Passwords are stored using Django's PBKDF2 hashing.</p>
+
+        <h4 class="mt-4">8. Contact</h4>
+        <p>For privacy inquiries, contact us at: <strong>privacy@iatm.us</strong></p>
+    </div>
+</div>
+{% endblock %}
