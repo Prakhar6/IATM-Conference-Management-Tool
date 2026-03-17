@@ -64,6 +64,7 @@ AUTH_USER_MODEL = 'accounts.CustomUser'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -167,6 +168,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Static files
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STORAGES = {
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 
 # Media files (user uploads)
 MEDIA_URL = '/media/'

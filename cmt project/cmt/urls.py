@@ -20,9 +20,11 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.conf.urls.i18n import i18n_patterns
 from django.views.generic import RedirectView
+from django.http import JsonResponse
 
 
 urlpatterns = [
+    path('health/', lambda r: JsonResponse({'status': 'ok'})),
     path('i18n/', include('django.conf.urls.i18n')),
 ]
 

@@ -1,0 +1,70 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: always
+    env_file:
+      - "./cmt project/.env"
+    environment:
+      POSTGRES_DB: ${DB_NAME:-iatm_conference_db}
+      POSTGRES_USER: ${DB_USER:-iatm_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - dbbackups:/backups
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-iatm_user} -d ${DB_NAME:-iatm_conference_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build: .
+    restart: always
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py collectstatic --noinput &&
+             gunicorn cmt.wsgi:application --bind 0.0.0.0:8000 --workers 3 --timeout 60"
+    volumes:
+      - staticfiles:/app/cmt\ project/staticfiles
+      - media:/app/cmt\ project/media
+    env_file:
+      - "./cmt project/.env"
+    environment:
+      DB_HOST: db
+    depends_on:
+      db:
+        condition: service_healthy
+
+  nginx:
+    image: nginx:1.27-alpine
+    restart: always
+    volumes:
+      - ./deploy/nginx.prod.conf:/etc/nginx/conf.d/default.conf:ro
+      - staticfiles:/static:ro
+      - media:/media:ro
+      - certbot-www:/var/www/certbot:ro
+      - certbot-conf:/etc/letsencrypt:ro
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - web
+
+  # Run once to get SSL cert: docker compose -f docker-compose.prod.yml run --rm certbot
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - certbot-www:/var/www/certbot
+      - certbot-conf:/etc/letsencrypt
+    # Replace YOUR_DOMAIN and YOUR_EMAIL below
+    command: certonly --webroot -w /var/www/certbot --email YOUR_EMAIL -d YOUR_DOMAIN --agree-tos --no-eff-email
+    profiles:
+      - certbot
+
+volumes:
+  pgdata:
+  dbbackups:
+  staticfiles:
+  media:
+  certbot-www:
+  certbot-conf:

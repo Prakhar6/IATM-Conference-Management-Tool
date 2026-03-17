@@ -6,6 +6,7 @@ COPY requirements.txt .
 RUN pip install -r requirements.txt
 COPY . .
 WORKDIR /app/cmt\ project
+RUN python manage.py collectstatic --noinput 2>/dev/null || true
 RUN useradd -m appuser && chown -R appuser /app
 USER appuser
 EXPOSE 8000
